@@ -29,7 +29,8 @@
     </nav>
     <div class="rodape-lateral">
       <b>{{ usuario.nome }}</b>
-      {{ usuario.papel | capitalize }} · <a href="/logout">Sair</a>
+      {{ usuario.papel | capitalize }} ·
+      <a href="/logout">{{ 'Trocar de usuário' if acesso_livre else 'Sair' }}</a>
     </div>
   </aside>
 

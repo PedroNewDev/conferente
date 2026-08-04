@@ -14,7 +14,13 @@ Docker Compose.
 
 ## Demonstração no ar
 
-**https://conferente-neon.vercel.app**
+**https://conferente-neon.vercel.app** — abre direto no painel, sem login.
+
+O acesso livre é um modo de demonstração (`ACESSO_LIVRE=true`): sem sessão, o
+sistema entra automaticamente como administrador. A autenticação continua
+implementada e é obrigatória em qualquer outro ambiente — a variável é
+`false` por padrão. Para ver o sistema pelos olhos de outro papel, use
+"Trocar de usuário" na barra lateral.
 
 Esse ambiente roda em plataforma serverless, que **não tem disco persistente**.
 Por isso o modo de demonstração (`api/index.py`) usa SQLite em `/tmp`: o banco
@@ -46,7 +52,9 @@ Os mesmos em qualquer ambiente (o seed cria um por papel):
 | `carlos@mercadobompreco.com.br` | `compra123` | comprador | cadastrar, disparar ciclo, liberar nota bloqueada, ajustar estoque |
 | `marina@mercadobompreco.com.br` | `financeiro123` | financeiro | dar baixa em contas a pagar, resolver ocorrências, consultar |
 
-A tela de login mostra os três — não é preciso decorar.
+A tela de login mostra os três — não é preciso decorar. Na demonstração
+online o login é dispensado (entra como `admin`); as senhas acima só são
+necessárias para trocar de papel ou rodar localmente.
 
 ## Como rodar sem Docker (desenvolvimento)
 

@@ -4,6 +4,8 @@ from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
 
+from app.config import settings
+
 # Caminho absoluto: o processo pode ser iniciado de qualquer diretório
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES))
@@ -57,6 +59,8 @@ templates.env.filters["qtd"] = quantidade
 templates.env.filters["data_br"] = data_br
 templates.env.filters["data_hora_br"] = data_hora_br
 templates.env.filters["cnpj"] = cnpj_fmt
+
+templates.env.globals["acesso_livre"] = settings.ACESSO_LIVRE
 
 ROTULOS_STATUS_NOTA = {
     "recebida": "Recebida", "rejeitada": "Rejeitada", "validada": "Validada",

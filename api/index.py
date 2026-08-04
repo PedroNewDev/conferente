@@ -21,6 +21,7 @@ TRABALHO = Path("/tmp/conferente")
 os.environ.setdefault("APP_SECRET", "demonstracao-conferente-vercel")
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{TRABALHO}/conferente.db")
 os.environ.setdefault("AGENDADOR_ATIVO", "false")   # sem processo de fundo em serverless
+os.environ.setdefault("ACESSO_LIVRE", "true")       # demonstração: entra sem login
 os.environ.setdefault("FONTE_DOCUMENTOS", "pasta")
 os.environ.setdefault("PASTA_ENTRADA", f"{TRABALHO}/entrada/novos")
 os.environ.setdefault("PASTA_PROCESSADOS", f"{TRABALHO}/entrada/processados")
