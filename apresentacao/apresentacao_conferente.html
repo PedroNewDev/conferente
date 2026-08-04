@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conferente — Apresentação</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Archivo:wght@600;700;800;900&display=swap">
+<style>
+  :root {
+    --papel:#f4f4f1; --cartao:#fff; --tinta:#1c2420; --fraca:#5b6660;
+    --linha:#e2e4df; --v900:#0d1f19; --v800:#143126; --verde:#1a7f5a;
+    --verde-suave:#e3f0e9; --ambar:#a06514; --ambar-suave:#f7ecd9;
+    --verm:#ab3434; --verm-suave:#f6e4e1; --azul:#2b6390; --azul-suave:#e3edf5;
+    --cinza:#ededea;
+    --f:"IBM Plex Sans","Segoe UI",sans-serif;
+    --ft:"Archivo","IBM Plex Sans",sans-serif;
+    --fm:"IBM Plex Mono",Consolas,monospace;
+  }
+  * { box-sizing:border-box; margin:0; }
+  html,body { height:100%; }
+  body { font-family:var(--f); background:#0a1512; color:var(--tinta); overflow:hidden; }
+
+  .slide {
+    position:absolute; inset:0; display:none; flex-direction:column;
+    padding:56px 72px; background:var(--papel); overflow:hidden;
+  }
+  .slide.ativa { display:flex; animation:entrar .35s ease-out; }
+  @keyframes entrar { from{opacity:0; transform:translateX(14px)} to{opacity:1; transform:none} }
+
+  .slide.escura { background:
+    radial-gradient(1200px 600px at -5% -10%, rgba(42,168,118,.22), transparent 60%),
+    linear-gradient(160deg, var(--v900), var(--v800) 75%);
+    color:#e6efe9; }
+  .slide.escura::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(0deg, transparent 0 38px, rgba(255,255,255,.03) 38px 39px),
+      repeating-linear-gradient(90deg, transparent 0 38px, rgba(255,255,255,.03) 38px 39px); }
+
+  .rotulo-topo { font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--verde); font-weight:700; margin-bottom:14px; }
+  .escura .rotulo-topo { color:#5fbf96; }
+  h1 { font-family:var(--ft); font-weight:900; font-size:clamp(40px,6vw,74px);
+    letter-spacing:-.03em; line-height:1.02; }
+  h2 { font-family:var(--ft); font-weight:800; font-size:clamp(26px,3.4vw,40px);
+    letter-spacing:-.02em; margin-bottom:22px; }
+  .sub { font-size:clamp(15px,1.6vw,19px); color:var(--fraca); max-width:760px; margin-top:16px; line-height:1.5; }
+  .escura .sub { color:#a9c3b5; }
+
+  .logotipo { font-family:var(--ft); font-weight:800; font-size:20px; color:#fff;
+    display:flex; align-items:center; gap:9px; }
+  .logotipo::before { content:""; width:22px; height:22px; border-radius:5px;
+    background:linear-gradient(135deg,var(--verde),#2aa876);
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
+
+  .grade { display:grid; gap:16px; margin-top:8px; }
+  .g2 { grid-template-columns:1fr 1fr; }
+  .g3 { grid-template-columns:1fr 1fr 1fr; }
+  .g4 { grid-template-columns:repeat(4,1fr); }
+
+  .caixa { background:var(--cartao); border:1px solid var(--linha); border-radius:8px;
+    padding:18px 20px; box-shadow:0 1px 2px rgba(28,36,32,.06); }
+  .caixa h3 { font-family:var(--ft); font-size:15px; font-weight:700; margin-bottom:6px; }
+  .caixa p { font-size:13.5px; color:var(--fraca); line-height:1.45; }
+  .caixa .mono { font-family:var(--fm); font-size:12px; }
+  .caixa.destaque { border-left:4px solid var(--verde); }
+  .caixa.alerta { border-left:4px solid var(--ambar); }
+  .caixa.perigo { border-left:4px solid var(--verm); }
+
+  .escura .caixa { background:rgba(255,255,255,.05); border-color:rgba(255,255,255,.12);
+    color:#e6efe9; }
+  .escura .caixa p { color:#a9c3b5; }
+
+  .selo { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600;
+    padding:3px 9px; border-radius:99px; white-space:nowrap; }
+  .selo::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .selo.ok { background:var(--verde-suave); color:#14603f; }
+  .selo.blq { background:var(--ambar-suave); color:var(--ambar); }
+  .selo.rej { background:var(--verm-suave); color:var(--verm); }
+  .selo.info { background:var(--azul-suave); color:var(--azul); }
+  .selo.neutro { background:var(--cinza); color:var(--fraca); }
+
+  table.t { width:100%; border-collapse:collapse; font-size:13px; background:#fff;
+    border:1px solid var(--linha); border-radius:8px; overflow:hidden; }
+  .t th { background:#16281f; color:#cfe0d6; text-align:left; padding:8px 12px;
+    font-size:10.5px; text-transform:uppercase; letter-spacing:.08em; }
+  .t td { padding:7px 12px; border-bottom:1px solid var(--linha); }
+  .t tr:last-child td { border-bottom:none; }
+  .t .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .t .fm { font-family:var(--fm); font-size:12px; }
+
+  /* fluxo do ciclo */
+  .fluxo { display:flex; align-items:stretch; gap:0; margin-top:10px; flex-wrap:wrap; }
+  .passo { flex:1; min-width:118px; background:#fff; border:1px solid var(--linha);
+    padding:14px 12px; position:relative; text-align:center; }
+  .passo:first-child { border-radius:8px 0 0 8px; }
+  .passo:last-child { border-radius:0 8px 8px 0; }
+  .passo + .passo { border-left:none; }
+  .passo b { display:block; font-family:var(--ft); font-size:13.5px; margin-bottom:4px; }
+  .passo span { font-size:11.5px; color:var(--fraca); line-height:1.3; display:block; }
+  .passo i { display:block; font-style:normal; font-size:19px; margin-bottom:6px; }
+  .passo::after { content:"→"; position:absolute; right:-8px; top:50%;
+    transform:translateY(-50%); z-index:2; color:var(--verde); font-weight:700;
+    background:var(--papel); border-radius:50%; }
+  .passo:last-child::after { display:none; }
+
+  /* mockup de navegador */
+  .navegador { background:#fff; border-radius:10px; overflow:hidden;
+    box-shadow:0 18px 50px rgba(6,20,15,.35); border:1px solid #d5d8d2; }
+  .navegador .barra { background:#e8eae5; padding:8px 12px; display:flex; gap:6px;
+    align-items:center; border-bottom:1px solid #d5d8d2; }
+  .navegador .barra i { width:10px; height:10px; border-radius:50%; background:#c9cdc5; }
+  .navegador .barra i:nth-child(1){ background:#e8918a } .navegador .barra i:nth-child(2){ background:#e8c98a }
+  .navegador .barra i:nth-child(3){ background:#9fd3ae }
+  .navegador .url { flex:1; background:#fff; border-radius:5px; font-family:var(--fm);
+    font-size:10.5px; color:var(--fraca); padding:3px 10px; margin-left:6px; }
+
+  /* mini-app dentro do mockup */
+  .mini { display:flex; font-size:10px; min-height:0; }
+  .mini .lat { width:118px; background:linear-gradient(180deg,var(--v900),var(--v800));
+    color:#cfe0d6; padding:10px 8px; flex-shrink:0; }
+  .mini .lat .lg { font-family:var(--ft); font-weight:800; font-size:11px; color:#fff;
+    margin-bottom:10px; display:flex; align-items:center; gap:5px; }
+  .mini .lat .lg::before { content:""; width:10px; height:10px; border-radius:3px;
+    background:linear-gradient(135deg,var(--verde),#2aa876); }
+  .mini .lat a { display:block; padding:4px 7px; border-radius:4px; color:#cfe0d6;
+    text-decoration:none; margin-bottom:1px; font-size:9.5px; }
+  .mini .lat a.on { background:var(--verde); color:#fff; }
+  .mini .area { flex:1; background:var(--papel); min-width:0; }
+  .mini .cab { background:#fff; border-bottom:1px solid var(--linha); padding:7px 12px;
+    font-family:var(--ft); font-weight:700; font-size:11px; display:flex;
+    justify-content:space-between; align-items:center; }
+  .mini .cab .bt { background:var(--verde); color:#fff; border-radius:4px;
+    padding:3px 8px; font-size:9px; font-weight:600; }
+  .mini .corpo { padding:10px 12px; }
+  .mini .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-bottom:9px; }
+  .mini .card { background:#fff; border:1px solid var(--linha); border-left:3px solid var(--verde);
+    border-radius:5px; padding:7px 8px; }
+  .mini .card.am { border-left-color:var(--ambar); } .mini .card.vm { border-left-color:var(--verm); }
+  .mini .card.az { border-left-color:var(--azul); }
+  .mini .card small { font-size:7px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--fraca); font-weight:600; display:block; }
+  .mini .card b { font-family:var(--ft); font-size:14px; }
+  .mini .card.vm b { color:var(--verm); } .mini .card.am b { color:var(--ambar); }
+  .mini table { width:100%; border-collapse:collapse; background:#fff;
+    border:1px solid var(--linha); border-radius:5px; overflow:hidden; }
+  .mini th { text-align:left; font-size:7.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--fraca); background:#fafaf8; padding:4px 8px; border-bottom:1px solid var(--linha); }
+  .mini td { padding:4px 8px; border-bottom:1px solid var(--linha); font-size:9px; }
+  .mini tr:last-child td { border-bottom:none; }
+  .mini .selo { font-size:7.5px; padding:1px 6px; gap:4px; }
+  .mini .selo::before { width:4px; height:4px; }
+  .mini .fmz { font-family:var(--fm); font-size:8px; }
+
+  .num-slide { position:absolute; bottom:22px; right:30px; font-family:var(--fm);
+    font-size:12px; color:var(--fraca); }
+  .escura .num-slide { color:#6d8578; }
+  .dica-nav { position:absolute; bottom:22px; left:30px; font-size:12px; color:var(--fraca); }
+  .escura .dica-nav { color:#6d8578; }
+
+  .kpis { display:flex; gap:40px; margin-top:34px; flex-wrap:wrap; }
+  .kpi b { font-family:var(--ft); font-size:clamp(34px,4.6vw,54px); font-weight:900;
+    letter-spacing:-.02em; display:block; color:#fff; }
+  .kpi span { font-size:13px; color:#a9c3b5; }
+  .kpi b em { font-style:normal; color:#5fbf96; }
+
+  .lista-limpa { list-style:none; margin-top:10px; }
+  .lista-limpa li { padding:9px 0 9px 30px; position:relative; font-size:15.5px; line-height:1.4; }
+  .lista-limpa li::before { content:"✓"; position:absolute; left:0; top:8px;
+    color:var(--verde); font-weight:700; }
+  .escura .lista-limpa li::before { color:#5fbf96; }
+</style>
+</head>
+<body>
+
+<!-- 1 · CAPA -->
+<section class="slide escura ativa">
+  <div class="logotipo">Conferente</div>
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; position:relative; z-index:1">
+    <div class="rotulo-topo">Mini-SaaS · Compras · Estoque · Contas a pagar</div>
+    <h1>Cada nota conferida<br>antes de virar<br>estoque e dívida.</h1>
+    <p class="sub">Recebimento automático de notas fiscais eletrônicas: validação,
+    conciliação com o pedido de compra, bloqueio de divergências e lançamento
+    nos controles — sem intervenção humana. Toda decisão é determinística.</p>
+    <div class="kpis">
+      <div class="kpi"><b>24<em>/24</em></b><span>regras automáticas<br>V · C · P</span></div>
+      <div class="kpi"><b>15</b><span>cenários de teste<br>ponta a ponta</span></div>
+      <div class="kpi"><b>51</b><span>testes<br>automatizados</span></div>
+    </div>
+  </div>
+  <div style="position:relative; z-index:1; font-size:12.5px; color:#6d8578; letter-spacing:.08em; text-transform:uppercase">
+    Python · FastAPI · PostgreSQL · SQLAlchemy · Docker</div>
+</section>
+
+<!-- 2 · O PROBLEMA -->
+<section class="slide">
+  <div class="rotulo-topo">O problema</div>
+  <h2>Receber nota fiscal na mão custa caro</h2>
+  <div class="grade g3" style="margin-top:18px">
+    <div class="caixa perigo">
+      <h3>Pagamento indevido</h3>
+      <p>Preço reajustado sem aviso, quantidade acima do pedido, item que
+      ninguém pediu — sem conferência item a item, a nota entra e a conta
+      é paga do mesmo jeito.</p>
+    </div>
+    <div class="caixa alerta">
+      <h3>Retrabalho constante</h3>
+      <p>Alguém abre o e-mail, baixa o XML, digita a entrada no estoque,
+      lança as parcelas no financeiro. Todo dia, para cada nota, com erro
+      de digitação no meio.</p>
+    </div>
+    <div class="caixa perigo">
+      <h3>Nota duplicada e fraude</h3>
+      <p>A mesma nota reenviada vira lançamento em dobro. Chave adulterada
+      ou destinatário errado passam despercebidos numa conferência visual.</p>
+    </div>
+  </div>
+  <div class="caixa destaque" style="margin-top:18px">
+    <h3>A pergunta do projeto</h3>
+    <p style="font-size:15px">Dá para receber, validar, conciliar e lançar <b>sem uma pessoa no
+    meio</b> — e com cada decisão explicada e auditável? O XML da NF-e já é
+    estruturado; o que falta não é leitura, é <b>processo</b>.</p>
+  </div>
+  <div class="num-slide">2 / 10</div>
+  <div class="dica-nav">← → para navegar</div>
+</section>
+
+<!-- 3 · A SOLUÇÃO: O CICLO -->
+<section class="slide">
+  <div class="rotulo-topo">A solução</div>
+  <h2>Um ciclo automático, do e-mail ao contas a pagar</h2>
+  <div class="fluxo">
+    <div class="passo"><i>📥</i><b>Coleta</b><span>pasta local ou caixa IMAP — fonte intercambiável por variável de ambiente</span></div>
+    <div class="passo"><i>🔍</i><b>Validação</b><span>V01–V12: chave, DV, CNPJs, somas, datas, duplicidade</span></div>
+    <div class="passo"><i>🔗</i><b>Conciliação</b><span>vincula ao pedido e compara item a item (P01–P09)</span></div>
+    <div class="passo"><i>⚖️</i><b>Decisão</b><span>aprova ou bloqueia — sempre com o motivo gravado</span></div>
+    <div class="passo"><i>📦</i><b>Efeitos</b><span>estoque com custo médio + parcelas no contas a pagar</span></div>
+    <div class="passo"><i>📧</i><b>Relatório</b><span>PDF por e-mail com o impacto financeiro do ciclo</span></div>
+  </div>
+  <div class="grade g4" style="margin-top:18px">
+    <div class="caixa"><h3>Idempotente</h3><p>Reprocessar nunca duplica: identidade por
+      chave de acesso e por documento (SHA-256 / Message-ID).</p></div>
+    <div class="caixa"><h3>Tolerante a falha</h3><p>XML corrompido vai para quarentena
+      com o motivo; o lote segue. Nenhuma exceção derruba o ciclo.</p></div>
+    <div class="caixa"><h3>Auditável</h3><p>Nenhum bloqueio sem registro: tipo,
+      severidade, mensagem e impacto em reais na tabela de ocorrências.</p></div>
+    <div class="caixa"><h3>Multiempresa</h3><p>Todo dado e toda consulta isolados por
+      empresa — testado com a mesma nota em dois tenants.</p></div>
+  </div>
+  <div class="num-slide">3 / 10</div>
+</section>
+
+<!-- 4 · ARQUITETURA -->
+<section class="slide">
+  <div class="rotulo-topo">Arquitetura</div>
+  <h2>Camadas simples, decisões explícitas</h2>
+  <div class="grade g2">
+    <div>
+      <table class="t">
+        <tr><th>Camada</th><th>Tecnologia</th><th>Papel</th></tr>
+        <tr><td><b>Web</b></td><td class="fm">FastAPI + Jinja2</td><td>telas server-side e API JSON em /docs</td></tr>
+        <tr><td><b>Serviços</b></td><td class="fm">services/</td><td>toda a regra de negócio (parser, validação, conciliação, estoque, financeiro)</td></tr>
+        <tr><td><b>Fontes</b></td><td class="fm">FontePasta · FonteImap</td><td>interface única — o pipeline não sabe de onde o XML veio</td></tr>
+        <tr><td><b>Dados</b></td><td class="fm">SQLAlchemy 2 + Alembic</td><td>16 tabelas, PostgreSQL 15</td></tr>
+        <tr><td><b>Agendador</b></td><td class="fm">APScheduler</td><td>ciclo a cada 15 min + alertas diários, sem broker</td></tr>
+        <tr><td><b>Relatório</b></td><td class="fm">Jinja2 + WeasyPrint</td><td>HTML → PDF, enviado por SMTP</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="caixa destaque" style="margin-bottom:14px">
+        <h3>Dinheiro é Decimal, nunca float</h3>
+        <p>Colunas <span class="mono">Numeric(15,2)</span> e <span class="mono">Numeric(15,4)</span>;
+        toda comparação com tolerância explícita e configurável por empresa.</p>
+      </div>
+      <div class="caixa destaque" style="margin-bottom:14px">
+        <h3>Estoque só muda por movimento</h3>
+        <p>Proibido UPDATE direto no saldo. Cada movimento grava
+        <span class="mono">saldo_apos</span> — a linha do tempo é auditável, e o
+        custo médio ponderado é recalculado a cada entrada.</p>
+      </div>
+      <div class="caixa destaque">
+        <h3>Algoritmos fiscais reais</h3>
+        <p>DV da chave de acesso (módulo 11, pesos cíclicos) e DV de CNPJ
+        implementados e varridos por teste com 3.000 chaves geradas —
+        adulteração de um dígito é detectada.</p>
+      </div>
+    </div>
+  </div>
+  <div class="num-slide">4 / 10</div>
+</section>
+
+<!-- 5 · CATÁLOGO DE REGRAS -->
+<section class="slide">
+  <div class="rotulo-topo">Catálogo de regras</div>
+  <h2>24 verificações, 3 severidades</h2>
+  <div class="grade g3">
+    <div>
+      <div class="caixa" style="margin-bottom:10px"><h3>V — Validação fiscal
+        <span class="selo rej" style="float:right">bloqueante rejeita</span></h3>
+        <p><b>V02</b> DV da chave · <b>V03</b> chave × XML · <b>V04/05</b> CNPJs ·
+        <b>V06</b> destinatário · <b>V07/08</b> somas · <b>V10/11</b> datas ·
+        <b>V12</b> duplicidade</p></div>
+      <div class="caixa"><h3>C — Cadastro
+        <span class="selo blq" style="float:right">alerta</span></h3>
+        <p><b>C01</b> fornecedor novo (criado inativo) · <b>C02</b> item sem
+        de-para · <b>C03</b> NCM fora do formato</p></div>
+    </div>
+    <div>
+      <div class="caixa"><h3>P — Conciliação com o pedido</h3>
+        <p style="margin-bottom:8px"><b>P01</b> sem pedido · <b>P02</b> preço acima
+        <span class="selo rej">bloqueia</span> · <b>P03</b> preço abaixo ·
+        <b>P04</b> quantidade acima <span class="selo rej">bloqueia</span> ·
+        <b>P05</b> entrega parcial · <b>P06</b> item fora do pedido
+        <span class="selo rej">bloqueia</span> · <b>P07</b> item não entregue ·
+        <b>P08</b> frete acima · <b>P09</b> CFOP fora de venda</p>
+        <p style="border-top:1px solid var(--linha); padding-top:8px">
+        <b>P02 e P04 calculam o impacto em reais</b> —
+        <span class="mono">(cobrado − esperado)</span> — que o relatório soma.
+        É a métrica de resultado do sistema.</p></div>
+    </div>
+    <div>
+      <div class="caixa destaque"><h3>Exemplo real do ciclo de demonstração</h3>
+        <p style="margin-bottom:6px">NF 90002 — óleo de soja a R$ 7,45 com pedido
+        a R$ 6,90 (+8%):</p>
+        <p class="mono" style="background:var(--verm-suave); color:var(--verm);
+          padding:8px 10px; border-radius:5px; font-size:12px">
+        P02 · bloqueante<br>impacto: R$ 55,00 (100 un × R$ 0,55)</p>
+        <p style="margin-top:8px">A nota fica bloqueada até alguém liberar com
+        justificativa — e a liberação registra quem foi e por quê.</p></div>
+    </div>
+  </div>
+  <div class="num-slide">5 / 10</div>
+</section>
+
+<!-- 6 · TELA: PAINEL -->
+<section class="slide" style="background:#e9ebe6">
+  <div class="rotulo-topo">O produto</div>
+  <h2>Painel — a operação inteira num olhar</h2>
+  <div class="navegador" style="max-width:960px; margin:6px auto 0; width:100%">
+    <div class="barra"><i></i><i></i><i></i><div class="url">conferente.local/painel</div></div>
+    <div class="mini">
+      <div class="lat">
+        <div class="lg">Conferente</div>
+        <a class="on">◧ Painel</a><a>▤ Notas fiscais</a><a>⚑ Divergências</a>
+        <a>↻ Execuções</a><a>☰ Pedidos</a><a>▦ Produtos</a><a>◫ Fornecedores</a>
+        <a>▥ Estoque</a><a>◔ Contas a pagar</a>
+      </div>
+      <div class="area">
+        <div class="cab">Painel de recebimento <span class="bt">▶ Executar ciclo agora</span></div>
+        <div class="corpo">
+          <div class="cards">
+            <div class="card"><small>Notas hoje</small><b>13</b></div>
+            <div class="card am"><small>Bloqueadas</small><b>3</b></div>
+            <div class="card vm"><small>Impacto em aberto</small><b>R$ 200,50</b></div>
+            <div class="card az"><small>Contas em aberto</small><b>R$ 4.288,25</b></div>
+          </div>
+          <table>
+            <tr><th>NF</th><th>Fornecedor</th><th>Valor</th><th>Status</th></tr>
+            <tr><td>90001/1</td><td>Distribuidora Alfa de Alimentos</td><td>R$ 2.433,00</td>
+                <td><span class="selo ok">Aprovada</span></td></tr>
+            <tr><td>90002/1</td><td>Distribuidora Alfa de Alimentos</td><td>R$ 1.313,00</td>
+                <td><span class="selo blq">Bloqueada</span></td></tr>
+            <tr><td>90003/1</td><td>Comercial Beta Distribuição</td><td>R$ 727,50</td>
+                <td><span class="selo blq">Bloqueada</span></td></tr>
+            <tr><td>90007/1</td><td>Distribuidora Alfa de Alimentos</td><td>R$ 225,00</td>
+                <td><span class="selo rej">Rejeitada</span></td></tr>
+            <tr><td>90011/1</td><td>Indústria Gama de Limpeza</td><td>R$ 105,00</td>
+                <td><span class="selo ok">Aprovada</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="sub" style="text-align:center; margin:14px auto 0">Indicadores do dia, divergências em aberto,
+  estoque abaixo do mínimo, contas a vencer e o botão que dispara o ciclo na hora.</p>
+  <div class="num-slide">6 / 10</div>
+</section>
+
+<!-- 7 · TELA: NOTA BLOQUEADA -->
+<section class="slide" style="background:#e9ebe6">
+  <div class="rotulo-topo">O produto</div>
+  <h2>Nota bloqueada — divergência explicada, liberação auditada</h2>
+  <div class="navegador" style="max-width:960px; margin:6px auto 0; width:100%">
+    <div class="barra"><i></i><i></i><i></i><div class="url">conferente.local/notas/2</div></div>
+    <div class="mini">
+      <div class="lat">
+        <div class="lg">Conferente</div>
+        <a>◧ Painel</a><a class="on">▤ Notas fiscais</a><a>⚑ Divergências</a>
+        <a>↻ Execuções</a><a>☰ Pedidos</a><a>▦ Produtos</a><a>◫ Fornecedores</a>
+        <a>▥ Estoque</a><a>◔ Contas a pagar</a>
+      </div>
+      <div class="area">
+        <div class="cab">NF 90002/1 — Distribuidora Alfa
+          <span class="selo blq">Bloqueada</span></div>
+        <div class="corpo">
+          <div style="background:#fff; border:1px solid var(--linha); border-left:3px solid var(--ambar);
+            border-radius:5px; padding:8px 10px; margin-bottom:9px; font-size:9px">
+            <b>Nota bloqueada.</b> A liberação exige justificativa e fica registrada.
+            <div style="display:flex; gap:6px; margin-top:6px">
+              <div style="flex:1; border:1px solid var(--linha); border-radius:4px; padding:3px 8px;
+                color:var(--fraca); font-size:8.5px">Ex.: reajuste autorizado pela diretoria…</div>
+              <span class="bt" style="background:var(--verde); color:#fff; border-radius:4px;
+                padding:3px 8px; font-size:8.5px; font-weight:600">Liberar nota</span>
+            </div>
+          </div>
+          <table style="margin-bottom:9px">
+            <tr><th>#</th><th>Item</th><th>Qtd</th><th>Unitário</th><th>Pedido: qtd × preço</th></tr>
+            <tr><td>1</td><td>Óleo de soja 900ml</td><td>100 CX</td>
+                <td style="color:var(--verm); font-weight:600">R$ 7,45</td>
+                <td>100 × R$ 6,90 <span style="color:var(--verm); font-size:8px">acima do pedido</span></td></tr>
+            <tr><td>2</td><td>Café torrado e moído 500g</td><td>40 CX</td>
+                <td>R$ 14,20</td><td>40 × R$ 14,20</td></tr>
+          </table>
+          <table>
+            <tr><th>Ocorrência</th><th>Mensagem</th><th>Impacto</th></tr>
+            <tr><td><span class="fmz" style="background:var(--verm-suave); color:var(--verm);
+                padding:1px 5px; border-radius:3px">P02</span></td>
+                <td>Preço 7,4500 acima do pedido (6,9000), além da tolerância.</td>
+                <td style="color:var(--verm); font-weight:600">R$ 55,00</td></tr>
+            <tr><td><span class="fmz" style="background:var(--azul-suave); color:var(--azul);
+                padding:1px 5px; border-radius:3px">V09</span></td>
+                <td>—</td><td>—</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="sub" style="text-align:center; margin:14px auto 0">Comparativo item a item contra o pedido,
+  ocorrência com impacto em reais e o fluxo de liberação com justificativa obrigatória.</p>
+  <div class="num-slide">7 / 10</div>
+</section>
+
+<!-- 8 · OS 15 CENÁRIOS -->
+<section class="slide">
+  <div class="rotulo-topo">Verificação</div>
+  <h2>15 cenários, 15 resultados exatos</h2>
+  <div class="grade g2" style="align-items:start">
+    <table class="t" style="font-size:12px">
+      <tr><th>Cenário</th><th>Resultado no ciclo</th></tr>
+      <tr><td>01 · Nota bate com o pedido</td><td><span class="selo ok">Aprovada</span> estoque + contas</td></tr>
+      <tr><td>02 · Preço 8% acima</td><td><span class="selo blq">Bloqueada</span> P02 · R$ 55,00</td></tr>
+      <tr><td>03 · Quantidade acima do saldo</td><td><span class="selo blq">Bloqueada</span> P04 · R$ 145,50</td></tr>
+      <tr><td>04 · Item fora do pedido</td><td><span class="selo blq">Bloqueada</span> P06</td></tr>
+      <tr><td>05 · Entrega parcial</td><td><span class="selo ok">Aprovada</span> pedido vira parcial</td></tr>
+      <tr><td>06 · Nota reenviada</td><td><span class="selo neutro">Descartada</span> V12</td></tr>
+      <tr><td>07 · Chave adulterada</td><td><span class="selo rej">Rejeitada</span> V02</td></tr>
+      <tr><td>08 · Total não fecha</td><td><span class="selo rej">Rejeitada</span> V08</td></tr>
+    </table>
+    <table class="t" style="font-size:12px">
+      <tr><th>Cenário</th><th>Resultado no ciclo</th></tr>
+      <tr><td>09 · Destinatário errado</td><td><span class="selo rej">Rejeitada</span> V06</td></tr>
+      <tr><td>10 · Fornecedor desconhecido</td><td><span class="selo ok">Aprovada</span> C01 · criado inativo</td></tr>
+      <tr><td>11 · Sem pedido em aberto</td><td><span class="selo ok">Aprovada</span> P01 (parametrizável)</td></tr>
+      <tr><td>12 · Devolução (CFOP 5202)</td><td><span class="selo info">Classificada</span> sem efeito</td></tr>
+      <tr><td>13 · XML corrompido</td><td><span class="selo blq">Quarentena</span> V01 + motivo</td></tr>
+      <tr><td>14 · Sem duplicatas</td><td><span class="selo ok">Aprovada</span> vencimento arbitrado</td></tr>
+      <tr><td>15 · Item sem de-para</td><td><span class="selo ok">Aprovada</span> C02 · sem movimento</td></tr>
+      <tr><td style="background:var(--verde-suave)"><b>Rodar tudo de novo</b></td>
+          <td style="background:var(--verde-suave)"><b>Nada duplica — idempotente</b></td></tr>
+    </table>
+  </div>
+  <div class="num-slide">8 / 10</div>
+</section>
+
+<!-- 9 · QUALIDADE -->
+<section class="slide escura">
+  <div class="rotulo-topo">Qualidade</div>
+  <h2 style="color:#fff">O que sustenta a confiança</h2>
+  <div class="grade g2" style="position:relative; z-index:1">
+    <div>
+      <ul class="lista-limpa" style="color:#e6efe9">
+        <li><b>51 testes automatizados</b> — unitários, um teste dedicado por regra
+          (V01–P09), integração com os 15 XMLs, idempotência e isolamento multiempresa.</li>
+        <li><b>3.000 chaves de acesso</b> geradas e revalidadas na varredura do DV;
+          adulteração de um dígito é sempre detectada.</li>
+        <li><b>Gerador e validador compartilham o mesmo código</b> — os XMLs de teste
+          são montados com o <span style="font-family:var(--fm)">monta_chave</span> do próprio projeto.</li>
+        <li><b>Transação por nota</b> — falha em uma não desfaz as demais; tudo em
+          <span style="font-family:var(--fm)">execucao_job</span> com resumo em JSON.</li>
+        <li><b>Docker Compose</b> — app + PostgreSQL sobem com um comando, com
+          migração e seed automáticos.</li>
+      </ul>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px; justify-content:center">
+      <div class="caixa"><h3 style="color:#5fbf96">Fora de escopo — por decisão</h3>
+        <p>A consulta à SEFAZ (situação de autorização/cancelamento) exige
+        certificado digital A1 e credenciais reais. Está documentada como a
+        <b>evolução prevista</b>, não como esquecimento — junto com a
+        manifestação do destinatário.</p></div>
+      <div class="caixa"><h3 style="color:#5fbf96">Determinístico — por princípio</h3>
+        <p>O XML da NF-e é estruturado. Ler, validar e comparar é aritmética
+        e consulta a cadastro. Determinismo significa: o mesmo XML produz
+        sempre a mesma decisão, explicável linha a linha.</p></div>
+    </div>
+  </div>
+  <div class="num-slide">9 / 10</div>
+</section>
+
+<!-- 10 · DEMO -->
+<section class="slide escura">
+  <div class="rotulo-topo">Demonstração ao vivo</div>
+  <h2 style="color:#fff">Roteiro de 5 minutos</h2>
+  <div class="grade g2" style="position:relative; z-index:1; align-items:start">
+    <ul class="lista-limpa" style="color:#e6efe9; font-size:16px">
+      <li><span style="font-family:var(--fm); color:#5fbf96">docker compose up</span> — banco, migração e seed sobem sozinhos</li>
+      <li>Gerar os 15 XMLs de teste na pasta de entrada</li>
+      <li>Painel → <b>“Executar ciclo agora”</b></li>
+      <li>Mostrar: aprovadas, bloqueadas com impacto em reais, rejeitadas, quarentena</li>
+      <li>Liberar a nota bloqueada com justificativa → efeitos aplicados na hora</li>
+      <li>Rodar o ciclo de novo → <b>nada duplica</b></li>
+      <li>Estoque com custo médio recalculado + contas a pagar criadas</li>
+      <li><span style="font-family:var(--fm); color:#5fbf96">/docs</span> — API documentada automaticamente</li>
+    </ul>
+    <div class="caixa" style="align-self:center">
+      <h3 style="color:#5fbf96; font-size:18px">Conferente</h3>
+      <p style="font-size:15px; line-height:1.6">
+        <b style="color:#fff">O diferencial não é a tela — é o que acontece sem ninguém olhar.</b><br><br>
+        Um agendador que a cada 15 minutos transforma e-mail com XML em
+        decisão auditada, estoque correto e conta a pagar lançada.</p>
+      <p style="margin-top:14px; padding-top:12px; border-top:1px solid rgba(255,255,255,.14);
+        font-size:14px; line-height:1.6">
+        <span style="color:#5fbf96; font-weight:600">Sistema no ar:</span><br>
+        <a href="https://conferente-neon.vercel.app" target="_blank"
+           style="color:#fff; font-family:var(--fm); font-size:13px; text-decoration:none;
+           border-bottom:1px solid #5fbf96">conferente-neon.vercel.app</a><br>
+        <span style="color:#a9c3b5; font-size:12.5px; font-family:var(--fm)">
+          ana@mercadobompreco.com.br · admin123</span></p>
+      <p style="margin-top:12px; color:#a9c3b5">Obrigado! Perguntas?</p>
+    </div>
+  </div>
+  <div class="num-slide">10 / 10</div>
+</section>
+
+<script>
+  const slides = [...document.querySelectorAll(".slide")];
+  let atual = 0;
+  function mostra(i) {
+    atual = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, j) => s.classList.toggle("ativa", j === atual));
+  }
+  document.addEventListener("keydown", (e) => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) mostra(atual + 1);
+    if (["ArrowLeft", "PageUp"].includes(e.key)) mostra(atual - 1);
+    if (e.key === "Home") mostra(0);
+    if (e.key === "End") mostra(slides.length - 1);
+  });
+  document.addEventListener("click", (e) => {
+    if (e.clientX > window.innerWidth / 2) mostra(atual + 1); else mostra(atual - 1);
+  });
+</script>
+</body>
+</html>
