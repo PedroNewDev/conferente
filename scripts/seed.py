@@ -1,7 +1,8 @@
 """Dados iniciais de demonstração.
 
-Cria uma empresa, dois usuários, três fornecedores, doze produtos com de-para
-e quatro pedidos de compra. Idempotente: se a empresa já existe, não recria.
+Cria uma empresa, três usuários (um por papel), três fornecedores, doze
+produtos com de-para e quatro pedidos de compra.
+Idempotente: se a empresa já existe, não recria.
 """
 import sys
 from datetime import date, timedelta
@@ -63,6 +64,9 @@ def popular(db) -> bool:
         Usuario(empresa_id=empresa.id, nome="Carlos Lima",
                 email="carlos@mercadobompreco.com.br",
                 senha_hash=hash_senha("compra123"), papel="comprador"),
+        Usuario(empresa_id=empresa.id, nome="Marina Duarte",
+                email="marina@mercadobompreco.com.br",
+                senha_hash=hash_senha("financeiro123"), papel="financeiro"),
     ])
 
     forn_a = Fornecedor(empresa_id=empresa.id, cnpj=CNPJ_FORN_A,
@@ -156,9 +160,12 @@ def rodar() -> None:
     db = SessionLocal()
     try:
         if popular(db):
-            print("Seed concluído: 1 empresa, 2 usuários, 3 fornecedores, "
+            print("Seed concluído: 1 empresa, 3 usuários, 3 fornecedores, "
                   "12 produtos com de-para e 4 pedidos de compra.")
-            print("Login: ana@mercadobompreco.com.br / admin123")
+            print("Logins:")
+            print("  ana@mercadobompreco.com.br     / admin123       (admin)")
+            print("  carlos@mercadobompreco.com.br  / compra123      (comprador)")
+            print("  marina@mercadobompreco.com.br  / financeiro123  (financeiro)")
         else:
             print("Seed já executado — empresa existente. Nada a fazer.")
     finally:

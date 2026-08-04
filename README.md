@@ -14,7 +14,7 @@ Docker Compose.
 
 ## Demonstração no ar
 
-**https://conferente-neon.vercel.app** — login `ana@mercadobompreco.com.br` / `admin123`.
+**https://conferente-neon.vercel.app**
 
 Esse ambiente roda em plataforma serverless, que **não tem disco persistente**.
 Por isso o modo de demonstração (`api/index.py`) usa SQLite em `/tmp`: o banco
@@ -34,12 +34,19 @@ docker compose up --build
 ```
 
 O container aplica as migrações, roda o seed e sobe em
-**http://localhost:8000**. Login de demonstração:
+**http://localhost:8000**.
 
-| Usuário | Senha | Papel |
-|---|---|---|
-| `ana@mercadobompreco.com.br` | `admin123` | admin |
-| `carlos@mercadobompreco.com.br` | `compra123` | comprador |
+## Usuários de teste
+
+Os mesmos em qualquer ambiente (o seed cria um por papel):
+
+| Usuário | Senha | Papel | O que pode fazer |
+|---|---|---|---|
+| `ana@mercadobompreco.com.br` | `admin123` | admin | tudo |
+| `carlos@mercadobompreco.com.br` | `compra123` | comprador | cadastrar, disparar ciclo, liberar nota bloqueada, ajustar estoque |
+| `marina@mercadobompreco.com.br` | `financeiro123` | financeiro | dar baixa em contas a pagar, resolver ocorrências, consultar |
+
+A tela de login mostra os três — não é preciso decorar.
 
 ## Como rodar sem Docker (desenvolvimento)
 
