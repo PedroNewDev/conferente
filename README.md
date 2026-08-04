@@ -12,6 +12,20 @@ Python 3.11+ · FastAPI · Jinja2 (server-side) · SQLAlchemy 2 · Alembic ·
 PostgreSQL 15 · lxml · imap-tools · WeasyPrint · APScheduler · pytest ·
 Docker Compose.
 
+## Demonstração no ar
+
+**https://conferente-neon.vercel.app** — login `ana@mercadobompreco.com.br` / `admin123`.
+
+Esse ambiente roda em plataforma serverless, que **não tem disco persistente**.
+Por isso o modo de demonstração (`api/index.py`) usa SQLite em `/tmp`: o banco
+é criado e semeado no primeiro acesso de cada instância, já com os 15 XMLs de
+teste na pasta de entrada — cada visitante encontra um ambiente limpo e pode
+rodar o ciclo do zero. O agendador fica desligado (não há processo de fundo em
+serverless); o ciclo é disparado pelo botão do painel.
+
+O **ambiente oficial** é o `docker-compose.yml` abaixo: PostgreSQL, disco
+persistente, agendador ativo a cada 15 minutos e relatório em PDF.
+
 ## Como rodar (Docker — recomendado)
 
 ```bash
