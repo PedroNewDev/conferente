@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Conferente</title>
+  <link rel="stylesheet" href="/static/estilo.css">
+</head>
+<body>
+<div class="pagina-login">
+  <section class="painel-marca">
+    <div class="logotipo">Conferente</div>
+    <div>
+      <h2>Cada nota conferida antes de virar estoque e dívida.</h2>
+      <p>Recebimento automático de NF-e: validação, conciliação com o pedido
+      de compra, bloqueio de divergências e lançamento no estoque e no
+      contas a pagar — sem intervenção manual.</p>
+    </div>
+    <div class="selo-rodape">Compras · Estoque · Contas a pagar</div>
+  </section>
+
+  <section class="painel-formulario">
+    <div class="caixa-login">
+      <h1>Entrar</h1>
+      <div class="sub">Use as credenciais da sua empresa.</div>
+
+      {% if erro %}<div class="aviso erro">{{ erro }}</div>{% endif %}
+
+      <form method="post" action="/login">
+        <label class="campo">
+          <span>E-mail</span>
+          <input type="email" name="email" required autofocus
+                 placeholder="voce@empresa.com.br">
+        </label>
+        <label class="campo">
+          <span>Senha</span>
+          <input type="password" name="senha" required placeholder="••••••••">
+        </label>
+        <button class="botao" type="submit">Entrar no sistema</button>
+      </form>
+
+      <div class="dica-login">
+        Ambiente de demonstração — <code>ana@mercadobompreco.com.br</code> /
+        <code>admin123</code>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

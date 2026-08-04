@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block titulo %}Painel{% endblock %}
+{% block titulo_pagina %}Painel de recebimento{% endblock %}
+{% block acoes_topo %}
+  <form method="post" action="/jobs/executar-ciclo">
+    <button class="botao" type="submit">▶ Executar ciclo agora</button>
+  </form>
+{% endblock %}
+
+{% block conteudo %}
+<div class="indicadores">
+  <div class="indicador">
+    <div class="rotulo">Notas hoje</div>
+    <div class="valor">{{ notas_hoje | length }}</div>
+    <div class="detalhe">{{ aprovadas_hoje }} aprovadas automaticamente</div>
+  </div>
+  <div class="indicador alerta">
+    <div class="rotulo">Notas bloqueadas</div>
+    <div class="valor">{{ bloqueadas_total }}</div>
+    <div class="detalhe">aguardando decisão</div>
+  </div>
+  <div class="indicador perigo">
+    <div class="rotulo">Impacto em aberto</div>
+    <div class="valor">R$ {{ impacto_aberto | moeda }}</div>
+    <div class="detalhe">divergências não resolvidas</div>
+  </div>
+  <div class="indicador info">
+    <div class="rotulo">Contas em aberto</div>
+    <div class="valor">R$ {{ contas_total_aberto | moeda }}</div>
+    <div class="detalhe">{{ a_vencer | length }} vencem nos próximos dias</div>
+  </div>
+</div>
+
+<div class="duas-colunas">
+  <div class="cartao sem-borda-corpo">
+    <div class="cabecalho-cartao">
+      <h2>Notas recebidas hoje</h2>
+      <a href="/notas" class="texto-fraco" style="font-size:12.5px">ver todas</a>
+    </div>
+    {% if notas_hoje %}
+    <table class="tabela">
+      <tr><th>NF</th><th>Fornecedor</th><th class="num">Valor</th><th>Status</th></tr>
+      {% for n in notas_hoje[:8] %}
+      <tr>
+        <td><a href="/notas/{{ n.id }}">{{ n.numero }}/{{ n.serie }}</a></td>
+        <td>{{ n.nome_emitente | truncate(34) }}</td>
+        <td class="num">R$ {{ n.valor_total | moeda }}</td>
+        <td><span class="selo {{ n.status }}">{{ rotulo_status(n.status) }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div class="vazio">Nenhuma nota recebida hoje. Coloque XMLs na pasta de
+    entrada e execute o ciclo.</div>
+    {% endif %}
+  </div>
+
+  <div class="cartao sem-borda-corpo">
+    <div class="cabecalho-cartao">
+      <h2>Divergências em aberto</h2>
+      <a href="/ocorrencias" class="texto-fraco" style="font-size:12.5px">ver fila</a>
+    </div>
+    {% if divergencias %}
+    <ul class="lista-ocorrencias">
+      {% for oc in divergencias %}
+      <li class="{{ oc.severidade }}">
+        <span class="codigo">{{ oc.tipo }}</span>
+        <div>
+          {{ oc.mensagem | truncate(110) }}
+          {% if oc.nota_id %}
+            <a href="/notas/{{ oc.nota_id }}" style="font-size:12px">abrir nota</a>
+          {% endif %}
+          {% if oc.valor_impacto %}
+            <div class="comparativo-diferenca destaque-negativo">
+              Impacto: R$ {{ oc.valor_impacto | moeda }}</div>
+          {% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="vazio">Nenhuma divergência em aberto. Tudo conferido.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="duas-colunas">
+  <div class="cartao sem-borda-corpo">
+    <div class="cabecalho-cartao">
+      <h2>Estoque abaixo do mínimo</h2>
+      <a href="/estoque" class="texto-fraco" style="font-size:12.5px">posição completa</a>
+    </div>
+    {% if abaixo_minimo %}
+    <table class="tabela">
+      <tr><th>Produto</th><th class="num">Atual</th><th class="num">Mínimo</th></tr>
+      {% for p in abaixo_minimo[:6] %}
+      <tr>
+        <td><a href="/estoque/{{ p.id }}/movimentos">{{ p.descricao }}</a></td>
+        <td class="num destaque-negativo">{{ p.estoque_atual | qtd }}</td>
+        <td class="num">{{ p.estoque_minimo | qtd }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div class="vazio">Nenhum produto abaixo do mínimo.</div>
+    {% endif %}
+  </div>
+
+  <div class="cartao sem-borda-corpo">
+    <div class="cabecalho-cartao">
+      <h2>Contas a vencer</h2>
+      <a href="/financeiro/contas" class="texto-fraco" style="font-size:12.5px">contas a pagar</a>
+    </div>
+    {% if a_vencer %}
+    <table class="tabela">
+      <tr><th>NF</th><th>Vencimento</th><th class="num">Valor</th></tr>
+      {% for c in a_vencer[:6] %}
+      <tr>
+        <td><a href="/notas/{{ c.nota_id }}">{{ c.nota.numero }}</a>
+            <span class="texto-fraco">parc. {{ c.numero_parcela }}</span></td>
+        <td>{{ c.vencimento | data_br }}</td>
+        <td class="num">R$ {{ c.valor | moeda }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% else %}
+    <div class="vazio">Nada a vencer no período de alerta.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="cartao sem-borda-corpo">
+  <div class="cabecalho-cartao">
+    <h2>Últimas execuções</h2>
+    <a href="/jobs" class="texto-fraco" style="font-size:12.5px">histórico completo</a>
+  </div>
+  {% if execucoes %}
+  <table class="tabela">
+    <tr><th>Rotina</th><th>Início</th><th>Resultado</th><th>Resumo</th></tr>
+    {% for e in execucoes %}
+    <tr>
+      <td class="mono">{{ e.job }}</td>
+      <td>{{ e.iniciado_em | data_hora_br }}</td>
+      <td>
+        {% if e.sucesso %}<span class="selo aprovada">Sucesso</span>
+        {% elif e.sucesso is none %}<span class="selo neutro">Em execução</span>
+        {% else %}<span class="selo rejeitada">Falha</span>{% endif %}
+      </td>
+      <td class="texto-fraco" style="font-size:12.5px">
+        {% if e.resumo %}
+          {{ e.resumo.get('notas_novas', '—') }} notas ·
+          {{ e.resumo.get('aprovadas', '—') }} aprovadas ·
+          {{ e.resumo.get('bloqueadas', '—') }} bloqueadas
+        {% elif e.erro %}{{ e.erro | truncate(80) }}{% else %}—{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="vazio">Nenhuma execução registrada ainda.</div>
+  {% endif %}
+</div>
+{% endblock %}
