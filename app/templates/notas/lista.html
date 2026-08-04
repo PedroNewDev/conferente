@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block titulo %}Notas fiscais{% endblock %}
+{% block titulo_pagina %}Notas fiscais{% endblock %}
+{% block acoes_topo %}
+  <form method="post" action="/notas/upload" enctype="multipart/form-data"
+        style="display:flex; gap:8px; align-items:center">
+    <input type="file" name="arquivo" accept=".xml" required style="max-width:220px">
+    <button class="botao secundario pequeno" type="submit">Enviar XML</button>
+  </form>
+{% endblock %}
+
+{% block conteudo %}
+<div class="cartao sem-borda-corpo">
+  <form class="filtros" method="get" action="/notas">
+    <label class="campo"><span>Status</span>
+      <select name="status">
+        <option value="">Todos</option>
+        {% for s in ['aprovada','bloqueada','rejeitada','validada','recebida','cancelada'] %}
+        <option value="{{ s }}" {{ 'selected' if filtros.status == s }}>{{ rotulo_status(s) }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="campo"><span>Fornecedor</span>
+      <select name="fornecedor_id">
+        <option value="0">Todos</option>
+        {% for f in fornecedores %}
+        <option value="{{ f.id }}" {{ 'selected' if filtros.fornecedor_id == f.id }}>
+          {{ f.nome_fantasia or f.razao_social }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="campo"><span>Emissão de</span>
+      <input type="date" name="inicio" value="{{ filtros.inicio }}"></label>
+    <label class="campo"><span>até</span>
+      <input type="date" name="fim" value="{{ filtros.fim }}"></label>
+    <label class="campo" style="min-width:220px"><span>Chave, número ou fornecedor</span>
+      <input type="text" name="busca" value="{{ filtros.busca }}" placeholder="Buscar…"></label>
+    <button class="botao pequeno" type="submit">Filtrar</button>
+  </form>
+
+  {% if notas %}
+  <table class="tabela">
+    <tr>
+      <th>NF</th><th>Fornecedor</th><th>Emissão</th><th>Operação</th>
+      <th class="num">Valor</th><th>Pedido</th><th>Status</th>
+    </tr>
+    {% for n in notas %}
+    <tr>
+      <td><a href="/notas/{{ n.id }}"><b>{{ n.numero }}</b>/{{ n.serie }}</a></td>
+      <td>{{ (n.nome_emitente or '—') | truncate(38) }}</td>
+      <td>{{ n.data_emissao | data_br }}</td>
+      <td><span class="selo {{ n.tipo_operacao }}">{{ n.tipo_operacao | capitalize }}</span></td>
+      <td class="num">R$ {{ n.valor_total | moeda }}</td>
+      <td>{{ n.pedido.numero if n.pedido else '—' }}</td>
+      <td><span class="selo {{ n.status }}">{{ rotulo_status(n.status) }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="vazio">Nenhuma nota encontrada com esses filtros.</div>
+  {% endif %}
+</div>
+{% endblock %}

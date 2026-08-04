@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block titulo %}Divergências{% endblock %}
+{% block titulo_pagina %}Fila de divergências em aberto{% endblock %}
+
+{% block conteudo %}
+<div class="cartao sem-borda-corpo">
+  {% if ocorrencias %}
+  <table class="tabela">
+    <tr>
+      <th>Código</th><th>Severidade</th><th>Descrição</th>
+      <th class="num">Impacto</th><th>Quando</th><th></th>
+    </tr>
+    {% for oc in ocorrencias %}
+    <tr>
+      <td class="mono"><b>{{ oc.tipo }}</b></td>
+      <td><span class="selo {{ oc.severidade }}">{{ oc.severidade | capitalize }}</span></td>
+      <td>
+        {{ oc.mensagem | truncate(90) }}
+        {% if oc.nota_id %}<a href="/notas/{{ oc.nota_id }}" style="font-size:12px">abrir nota</a>{% endif %}
+      </td>
+      <td class="num">{% if oc.valor_impacto %}
+        <span class="destaque-negativo">R$ {{ oc.valor_impacto | moeda }}</span>
+        {% else %}—{% endif %}</td>
+      <td class="texto-fraco">{{ oc.criado_em | data_hora_br }}</td>
+      <td>
+        <form method="post" action="/ocorrencias/{{ oc.id }}/resolver"
+              class="acoes-inline">
+          <input type="text" name="observacao" placeholder="Observação"
+                 style="width:150px; font-size:12.5px; padding:4px 8px">
+          <button class="botao secundario pequeno" type="submit">Resolver</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="vazio">Fila limpa — nenhuma divergência em aberto. 🎯</div>
+  {% endif %}
+</div>
+{% endblock %}

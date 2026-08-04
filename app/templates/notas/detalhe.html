@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block titulo %}NF {{ nota.numero }}/{{ nota.serie }}{% endblock %}
+{% block titulo_pagina %}NF {{ nota.numero }}/{{ nota.serie }} —
+  {{ nota.nome_emitente | truncate(40) }}{% endblock %}
+{% block acoes_topo %}
+  <span class="selo {{ nota.status }}">{{ rotulo_status(nota.status) }}</span>
+  {% if nota.xml_path %}<a class="botao secundario pequeno" href="/notas/{{ nota.id }}/xml">Baixar XML</a>{% endif %}
+{% endblock %}
+
+{% block conteudo %}
+
+{% if nota.status == 'bloqueada' %}
+<div class="cartao" style="border-left:4px solid var(--ambar)">
+  <div class="corpo-cartao">
+    <b>Nota bloqueada.</b> Revise as divergências abaixo. A liberação exige
+    justificativa e fica registrada com o seu nome.
+    <form method="post" action="/notas/{{ nota.id }}/liberar"
+          class="formulario-linha" style="margin-top:12px">
+      <label class="campo" style="flex:3"><span>Justificativa da liberação</span>
+        <input type="text" name="justificativa" required
+               placeholder="Ex.: reajuste autorizado pelo comprador em 02/08"></label>
+      <button class="botao" type="submit"
+              onclick="return confirm('Liberar esta nota? Os efeitos de estoque e financeiro serão aplicados.')">
+        Liberar nota</button>
+    </form>
+    {% if pedidos_abertos %}
+    <hr class="separador">
+    <form method="post" action="/notas/{{ nota.id }}/vincular-pedido"
+          class="formulario-linha">
+      <label class="campo" style="flex:2"><span>Vincular a outro pedido e reconciliar</span>
+        <select name="pedido_id">
+          {% for p in pedidos_abertos %}
+          <option value="{{ p.id }}">{{ p.numero }} — R$ {{ p.valor_total | moeda }}</option>
+          {% endfor %}
+        </select></label>
+      <button class="botao secundario" type="submit">Vincular pedido</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="duas-colunas">
+  <div class="cartao">
+    <div class="cabecalho-cartao"><h2>Dados da nota</h2></div>
+    <div class="corpo-cartao">
+      <table class="tabela">
+        <tr><td class="texto-fraco">Chave de acesso</td>
+            <td><span class="chave-acesso">{{ nota.chave }}</span></td></tr>
+        <tr><td class="texto-fraco">Emitente</td>
+            <td>{{ nota.nome_emitente }}<br>
+                <span class="mono texto-fraco">{{ nota.cnpj_emitente | cnpj }}</span></td></tr>
+        <tr><td class="texto-fraco">Emissão</td><td>{{ nota.data_emissao | data_hora_br }}</td></tr>
+        <tr><td class="texto-fraco">Natureza</td><td>{{ nota.natureza_operacao or '—' }}</td></tr>
+        <tr><td class="texto-fraco">CFOP predominante</td>
+            <td class="mono">{{ nota.cfop_predominante or '—' }}
+                <span class="selo {{ nota.tipo_operacao }}">{{ nota.tipo_operacao | capitalize }}</span></td></tr>
+        <tr><td class="texto-fraco">Pedido vinculado</td>
+            <td>{% if nota.pedido %}<a href="/pedidos/{{ nota.pedido.id }}">{{ nota.pedido.numero }}</a>
+                {% else %}—{% endif %}</td></tr>
+        <tr><td class="texto-fraco">Origem</td><td>{{ nota.origem }} · recebida {{ nota.recebida_em | data_hora_br }}</td></tr>
+        {% if nota.justificativa_liberacao %}
+        <tr><td class="texto-fraco">Liberação</td>
+            <td>{{ nota.justificativa_liberacao }}</td></tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+  <div class="cartao">
+    <div class="cabecalho-cartao"><h2>Totais</h2></div>
+    <div class="corpo-cartao">
+      <table class="tabela">
+        <tr><td>Produtos</td><td class="num">R$ {{ nota.valor_produtos | moeda }}</td></tr>
+        <tr><td>Desconto</td><td class="num">− R$ {{ nota.valor_desconto | moeda }}</td></tr>
+        <tr><td>Frete</td><td class="num">R$ {{ nota.valor_frete | moeda }}</td></tr>
+        <tr><td>IPI + ST + outros</td>
+            <td class="num">R$ {{ (nota.valor_ipi + nota.valor_st + nota.valor_outros + nota.valor_seguro) | moeda }}</td></tr>
+        <tr><td><b>Total da nota</b></td>
+            <td class="num"><b>R$ {{ nota.valor_total | moeda }}</b></td></tr>
+      </table>
+      {% if nota.duplicatas %}
+      <hr class="separador">
+      <table class="tabela">
+        <tr><th>Parcela</th><th>Vencimento</th><th class="num">Valor</th></tr>
+        {% for d in nota.duplicatas %}
+        <tr><td>{{ d.numero or loop.index }}</td>
+            <td>{{ d.vencimento | data_br }}</td>
+            <td class="num">R$ {{ d.valor | moeda }}</td></tr>
+        {% endfor %}
+      </table>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="cartao sem-borda-corpo">
+  <div class="cabecalho-cartao"><h2>Itens — comparativo com o pedido</h2></div>
+  <table class="tabela">
+    <tr>
+      <th>#</th><th>Código</th><th>Descrição</th><th class="num">Qtd</th>
+      <th class="num">Unitário</th><th class="num">Total</th>
+      <th class="num">Pedido: qtd × preço</th>
+    </tr>
+    {% for i in nota.itens %}
+    <tr class="linha-comparativo">
+      <td>{{ i.n_item }}</td>
+      <td class="mono">{{ i.codigo_fornecedor }}</td>
+      <td>{{ i.descricao | truncate(42) }}
+        {% if not i.produto_id %}<span class="selo alerta">sem de-para</span>{% endif %}
+      </td>
+      <td class="num">{{ i.quantidade | qtd }} {{ i.unidade }}</td>
+      <td class="num">R$ {{ i.valor_unitario | moeda }}</td>
+      <td class="num">R$ {{ i.valor_total | moeda }}</td>
+      <td class="num">
+        {% if i.pedido_item %}
+          {{ i.pedido_item.quantidade | qtd }} × R$ {{ i.pedido_item.preco_unitario | moeda }}
+          {% if i.valor_unitario > i.pedido_item.preco_unitario %}
+            <div class="comparativo-diferenca destaque-negativo">acima do pedido</div>
+          {% endif %}
+        {% else %}<span class="texto-fraco">—</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="cartao sem-borda-corpo">
+  <div class="cabecalho-cartao"><h2>Ocorrências</h2></div>
+  {% if nota.ocorrencias %}
+  <ul class="lista-ocorrencias">
+    {% for oc in nota.ocorrencias %}
+    <li class="{{ oc.severidade }}">
+      <span class="codigo">{{ oc.tipo }}</span>
+      <div>
+        {{ oc.mensagem }}
+        {% if oc.valor_impacto %}
+          <span class="destaque-negativo">— impacto R$ {{ oc.valor_impacto | moeda }}</span>
+        {% endif %}
+        {% if oc.resolvida %}
+          <div class="comparativo-diferenca">✓ Resolvida
+            {% if oc.observacao_resolucao %}· {{ oc.observacao_resolucao }}{% endif %}</div>
+        {% endif %}
+      </div>
+      <span class="selo {{ oc.severidade }}" style="margin-left:auto">{{ oc.severidade | capitalize }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="vazio">Nenhuma ocorrência registrada — nota limpa.</div>
+  {% endif %}
+</div>
+
+{% if nota.status not in ('aprovada', 'cancelada') %}
+<details class="dobra cartao" style="padding:14px 18px">
+  <summary>Cancelar esta nota</summary>
+  <form method="post" action="/notas/{{ nota.id }}/cancelar"
+        class="formulario-linha" style="margin-top:12px">
+    <label class="campo" style="flex:3"><span>Motivo do cancelamento</span>
+      <input type="text" name="motivo" required></label>
+    <button class="botao perigo" type="submit"
+            onclick="return confirm('Cancelar esta nota?')">Cancelar nota</button>
+  </form>
+</details>
+{% endif %}
+{% endblock %}
