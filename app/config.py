@@ -32,11 +32,6 @@ class Settings(BaseSettings):
     AGENDADOR_ATIVO: bool = True
     INTERVALO_CICLO_MINUTOS: int = 15
 
-    # Demonstração: entra automaticamente como administrador, sem tela de
-    # login. A autenticação continua implementada e a tela segue disponível
-    # em /login para trocar de papel. NUNCA ligar em produção real.
-    ACESSO_LIVRE: bool = False
-
 
 @lru_cache
 def get_settings() -> Settings:
