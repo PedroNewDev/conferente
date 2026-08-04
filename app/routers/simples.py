@@ -75,10 +75,15 @@ def automatizador(request: Request, db: Session = Depends(get_db),
               .order_by(ExecucaoJob.iniciado_em.desc())
               .first())
 
+    aprovadas_total = (db.query(NotaFiscal)
+                       .filter(NotaFiscal.empresa_id == usuario.empresa_id,
+                               NotaFiscal.status == StatusNota.APROVADA.value)
+                       .count())
     return templates.TemplateResponse(request, "simples.html", {
         "usuario": usuario, "empresa": empresa,
         "notas": [{"nota": n, "motivos": _motivos(n)} for n in notas],
         "total_notas": total,
+        "aprovadas_total": aprovadas_total,
         "ultima_execucao": ultima,
         "erro": request.query_params.get("erro"),
         **_resumo_do_dinheiro(db, usuario.empresa_id),

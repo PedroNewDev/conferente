@@ -5,6 +5,7 @@
 {% block acoes_topo %}
   <span class="selo {{ nota.status }}">{{ rotulo_status(nota.status) }}</span>
   {% if nota.xml_path %}<a class="botao secundario pequeno" href="/notas/{{ nota.id }}/xml">Baixar XML</a>{% endif %}
+  <a class="botao secundario pequeno" href="/notas/{{ nota.id }}/exportar.json">Exportar JSON</a>
 {% endblock %}
 
 {% block conteudo %}

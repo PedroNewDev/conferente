@@ -149,6 +149,31 @@ body.tela-simples {
 .placar-item.dinheiro { border-color: #d9c4a8; background: #fdf9f3; }
 .placar-item.dinheiro b { color: var(--ambar); font-size: 26px; }
 
+/* ---------- exportação para o ERP ---------- */
+.exportacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--cartao);
+  border: 1px solid var(--linha);
+  border-left: 4px solid var(--azul);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 32px;
+  box-shadow: var(--sombra);
+}
+.exportacao b { font-family: var(--fonte-titulo); font-size: 15px; }
+.exportacao p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--tinta-fraca);
+  line-height: 1.4;
+  max-width: 420px;
+}
+.exportacao .botao { flex-shrink: 0; background: var(--azul); }
+.exportacao .botao:hover { background: #23557a; }
+
 /* ---------- lista de notas ---------- */
 .resultado h2 {
   font-family: var(--fonte-titulo);
@@ -227,6 +252,7 @@ body.tela-simples {
 .detalhe {
   display: inline-block;
   margin-top: 8px;
+  margin-right: 14px;
   font-size: 12.5px;
   color: var(--tinta-fraca);
 }

@@ -1,0 +1,13 @@
+INFO:     Started server process [13064]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8078 (Press CTRL+C to quit)
+INFO:     127.0.0.1:53867 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53868 - "POST /processar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:53868 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53871 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53871 - "GET /static/estilo.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53871 - "GET /static/simples.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53871 - "GET /favicon.ico HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:53871 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53876 - "GET / HTTP/1.1" 200 OK

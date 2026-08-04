@@ -69,6 +69,18 @@
     </div>
   </section>
 
+  {% if aprovadas_total %}
+  <section class="exportacao">
+    <div>
+      <b>Mandar para o seu ERP</b>
+      <p>{{ aprovadas_total }} nota{{ 's' if aprovadas_total > 1 }} aprovada{{ 's' if aprovadas_total > 1 }},
+      com os produtos já identificados pelo seu código interno. As bloqueadas
+      ficam de fora até você decidir.</p>
+    </div>
+    <a class="botao" href="/exportar.json">Baixar arquivo JSON</a>
+  </section>
+  {% endif %}
+
   <section class="resultado">
     <h2>O que aconteceu com cada nota</h2>
 
@@ -119,6 +131,9 @@
           {% endif %}
 
           <a href="/notas/{{ n.id }}" class="detalhe">ver a nota inteira</a>
+          {% if n.status == 'aprovada' %}
+          <a href="/notas/{{ n.id }}/exportar.json" class="detalhe">baixar JSON</a>
+          {% endif %}
         </div>
       </li>
       {% endfor %}

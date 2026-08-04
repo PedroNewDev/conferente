@@ -98,6 +98,26 @@ uvicorn app.main:app --reload
 6. Rodar o ciclo de novo e mostrar que **nada duplica** (idempotência).
 7. `GET /docs` — documentação automática da API JSON.
 
+## Exportação para outro ERP
+
+O Conferente pode ser usado como **front de entrada de notas**: ele lê o XML,
+valida, concilia com o pedido de compra e entrega o lançamento pronto — com o
+produto do fornecedor já traduzido para o **seu** código interno pelo de-para.
+O ERP principal só recebe dado conferido.
+
+| Rota | O que devolve |
+|---|---|
+| `GET /exportar.json` | arquivo com as notas **aprovadas** (bloqueadas ficam de fora até você decidir) |
+| `GET /exportar.json?status=bloqueada` | outro status, quando quiser |
+| `GET /notas/{id}/exportar.json` | uma nota específica |
+| `GET /api/exportacao` | mesmo conteúdo, para integração direta |
+
+Cada item traz `codigo_no_fornecedor` e `codigo_interno`, além de
+`identificado: false` quando não há de-para — assim o ERP sabe o que precisa
+de cadastro antes de importar. **Valores numéricos saem como texto**: JSON não
+tem tipo decimal e converter para float perderia centavos; leia-os como
+decimal do lado de lá.
+
 ## Fonte de documentos
 
 O pipeline não sabe de onde o XML veio — a fonte é abstrata:
