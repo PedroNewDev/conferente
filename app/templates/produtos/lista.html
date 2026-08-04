@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block titulo %}Produtos{% endblock %}
+{% block titulo_pagina %}Produtos{% endblock %}
+
+{% block conteudo %}
+<div class="cartao sem-borda-corpo">
+  <form class="filtros" method="get" action="/produtos">
+    <label class="campo" style="min-width:240px"><span>Buscar</span>
+      <input type="text" name="busca" value="{{ busca }}"
+             placeholder="Código ou descrição"></label>
+    <button class="botao pequeno" type="submit">Buscar</button>
+  </form>
+
+  {% if produtos %}
+  <table class="tabela">
+    <tr>
+      <th>Código</th><th>Descrição</th><th>Un.</th><th class="mono">NCM</th>
+      <th class="num">Estoque</th><th class="num">Mínimo</th>
+      <th class="num">Custo médio</th><th></th>
+    </tr>
+    {% for p in produtos %}
+    <tr>
+      <td class="mono">{{ p.codigo_interno }}</td>
+      <td><a href="/produtos/{{ p.id }}">{{ p.descricao }}</a>
+        {% if not p.ativo %}<span class="selo neutro">inativo</span>{% endif %}</td>
+      <td>{{ p.unidade }}</td>
+      <td class="mono">{{ p.ncm or '—' }}</td>
+      <td class="num {{ 'destaque-negativo' if p.estoque_atual < p.estoque_minimo }}">
+        {{ p.estoque_atual | qtd }}</td>
+      <td class="num">{{ p.estoque_minimo | qtd }}</td>
+      <td class="num">R$ {{ p.custo_medio | moeda }}</td>
+      <td><a href="/estoque/{{ p.id }}/movimentos" style="font-size:12.5px">extrato</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="vazio">Nenhum produto cadastrado.</div>
+  {% endif %}
+</div>
+
+<div class="cartao">
+  <div class="cabecalho-cartao"><h2>Novo produto</h2></div>
+  <div class="corpo-cartao">
+    <form method="post" action="/produtos" class="formulario-linha">
+      <label class="campo"><span>Código interno</span>
+        <input type="text" name="codigo_interno" required></label>
+      <label class="campo" style="flex:2"><span>Descrição</span>
+        <input type="text" name="descricao" required></label>
+      <label class="campo" style="max-width:90px"><span>Unidade</span>
+        <input type="text" name="unidade" required placeholder="UN"></label>
+      <label class="campo" style="max-width:120px"><span>NCM</span>
+        <input type="text" name="ncm" maxlength="8" placeholder="8 dígitos"></label>
+      <label class="campo" style="max-width:120px"><span>Estoque mínimo</span>
+        <input type="number" name="estoque_minimo" step="0.0001" value="0"></label>
+      <button class="botao" type="submit">Cadastrar</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
