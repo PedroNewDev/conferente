@@ -1,0 +1,12 @@
+.venv
+__pycache__
+*.pyc
+conferente.db
+servidor.log
+relatorios
+arquivo
+entrada
+tests
+.pytest_cache
+apresentacao
+.git

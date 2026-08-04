@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block titulo %}{{ produto.descricao }}{% endblock %}
+{% block titulo_pagina %}{{ produto.descricao }}{% endblock %}
+{% block acoes_topo %}
+  <a class="botao secundario pequeno" href="/estoque/{{ produto.id }}/movimentos">Extrato de estoque</a>
+{% endblock %}
+
+{% block conteudo %}
+<div class="duas-colunas">
+  <div class="cartao">
+    <div class="cabecalho-cartao"><h2>Dados do produto</h2></div>
+    <div class="corpo-cartao">
+      <form method="post" action="/produtos/{{ produto.id }}">
+        <label class="campo"><span>Descrição</span>
+          <input type="text" name="descricao" value="{{ produto.descricao }}" required></label>
+        <div class="formulario-linha">
+          <label class="campo"><span>Unidade</span>
+            <input type="text" name="unidade" value="{{ produto.unidade }}" required></label>
+          <label class="campo"><span>NCM</span>
+            <input type="text" name="ncm" value="{{ produto.ncm or '' }}" maxlength="8"></label>
+          <label class="campo"><span>Estoque mínimo</span>
+            <input type="number" name="estoque_minimo" step="0.0001"
+                   value="{{ produto.estoque_minimo }}"></label>
+          <label class="campo"><span>Situação</span>
+            <select name="ativo">
+              <option value="sim" {{ 'selected' if produto.ativo }}>Ativo</option>
+              <option value="nao" {{ 'selected' if not produto.ativo }}>Inativo</option>
+            </select></label>
+        </div>
+        <button class="botao" type="submit">Salvar alterações</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="cartao">
+    <div class="cabecalho-cartao"><h2>Posição</h2></div>
+    <div class="corpo-cartao">
+      <table class="tabela">
+        <tr><td>Código interno</td><td class="mono">{{ produto.codigo_interno }}</td></tr>
+        <tr><td>Estoque atual</td>
+            <td class="num {{ 'destaque-negativo' if produto.estoque_atual < produto.estoque_minimo }}">
+              {{ produto.estoque_atual | qtd }} {{ produto.unidade }}</td></tr>
+        <tr><td>Custo médio</td><td class="num">R$ {{ produto.custo_medio | moeda }}</td></tr>
+        <tr><td>Valor em estoque</td>
+            <td class="num">R$ {{ (produto.estoque_atual * produto.custo_medio) | moeda }}</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="cartao sem-borda-corpo">
+  <div class="cabecalho-cartao"><h2>De-para por fornecedor</h2></div>
+  {% if vinculos %}
+  <table class="tabela">
+    <tr><th>Fornecedor</th><th>Código no fornecedor</th><th>EAN</th></tr>
+    {% for v in vinculos %}
+    <tr>
+      <td>{% for f in fornecedores if f.id == v.fornecedor_id %}{{ f.razao_social }}{% endfor %}</td>
+      <td class="mono">{{ v.codigo_no_fornecedor }}</td>
+      <td class="mono">{{ v.ean or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="vazio">Sem de-para cadastrado. Notas deste produto vão gerar a
+  ocorrência C02 até o vínculo ser criado.</div>
+  {% endif %}
+  <div class="corpo-cartao" style="border-top:1px solid var(--linha)">
+    <form method="post" action="/produtos/{{ produto.id }}/vinculos"
+          class="formulario-linha">
+      <label class="campo" style="flex:2"><span>Fornecedor</span>
+        <select name="fornecedor_id" required>
+          {% for f in fornecedores %}
+          <option value="{{ f.id }}">{{ f.nome_fantasia or f.razao_social }}</option>
+          {% endfor %}
+        </select></label>
+      <label class="campo"><span>Código no fornecedor</span>
+        <input type="text" name="codigo_no_fornecedor" required></label>
+      <label class="campo"><span>EAN (opcional)</span>
+        <input type="text" name="ean" maxlength="14"></label>
+      <button class="botao" type="submit">Adicionar vínculo</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
