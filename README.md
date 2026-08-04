@@ -1,3 +1,10 @@
+#Grupo
+Pedro 
+Will
+Luis
+Dyullio
+Herivelto
+
 # Conferente
 
 Mini-SaaS de compras, estoque e contas a pagar cujo núcleo é uma rotina
