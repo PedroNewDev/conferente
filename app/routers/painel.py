@@ -52,7 +52,7 @@ def indicadores(db: Session, empresa_id: int) -> dict:
     }
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/painel", response_class=HTMLResponse)
 def painel(request: Request, db: Session = Depends(get_db),
            usuario: Usuario = Depends(usuario_atual)):
     empresa = db.get(Empresa, usuario.empresa_id)

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conferente — conferência automática de notas</title>
+  <link rel="stylesheet" href="/static/estilo.css">
+  <link rel="stylesheet" href="/static/simples.css">
+</head>
+<body class="tela-simples">
+
+<header class="cabeca">
+  <div class="marca-simples">Conferente</div>
+  <div class="cabeca-acoes">
+    <span class="texto-fraco">{{ empresa.razao_social }}</span>
+    <a href="/painel" class="link-avancado">Sistema completo →</a>
+  </div>
+</header>
+
+<main class="palco">
+
+  <section class="chamada">
+    <h1>Confira suas notas fiscais<br>sem conferir nada.</h1>
+    <p>O sistema lê cada nota, compara com o pedido de compra e separa o que
+    está certo do que precisa da sua atenção.</p>
+
+    {% if erro %}<div class="aviso erro" style="max-width:520px">{{ erro }}</div>{% endif %}
+
+    <div class="acao-principal">
+      <form method="post" action="/processar">
+        <button class="botao-gigante" type="submit">
+          Conferir notas agora
+          <small>lê tudo que chegou por e-mail ou na pasta de entrada</small>
+        </button>
+      </form>
+
+      <form method="post" action="/enviar" enctype="multipart/form-data"
+            class="envio-manual">
+        <label class="rotulo-arquivo">
+          <input type="file" name="arquivo" accept=".xml" required
+                 onchange="this.form.querySelector('button').disabled = !this.files.length;
+                           this.parentNode.querySelector('span').textContent =
+                             this.files[0] ? this.files[0].name : 'ou envie um arquivo XML';">
+          <span>ou envie um arquivo XML</span>
+        </label>
+        <button class="botao secundario" type="submit" disabled>Enviar</button>
+      </form>
+    </div>
+
+    {% if ultima_execucao and ultima_execucao.terminado_em %}
+    <p class="ultima-vez">Última conferência em
+      {{ ultima_execucao.terminado_em | data_hora_br }}</p>
+    {% endif %}
+  </section>
+
+  {% if total_notas %}
+  <section class="placar">
+    <div class="placar-item">
+      <b>{{ total_notas }}</b>
+      <span>notas conferidas</span>
+    </div>
+    <div class="placar-item {{ 'atencao' if barradas }}">
+      <b>{{ barradas }}</b>
+      <span>precisam da sua atenção</span>
+    </div>
+    <div class="placar-item {{ 'dinheiro' if impacto }}">
+      <b>R$ {{ impacto | moeda }}</b>
+      <span>de cobrança indevida barrada</span>
+    </div>
+  </section>
+
+  <section class="resultado">
+    <h2>O que aconteceu com cada nota</h2>
+
+    <ul class="notas">
+      {% for linha in notas %}
+      {% set n = linha.nota %}
+      <li class="nota {{ n.status }}">
+        <div class="marcador">
+          {% if n.status == 'aprovada' %}✓
+          {% elif n.status == 'bloqueada' %}!
+          {% elif n.status == 'rejeitada' %}✕
+          {% else %}·{% endif %}
+        </div>
+
+        <div class="conteudo-nota">
+          <div class="topo-nota">
+            <b>Nota {{ n.numero }}</b>
+            <span class="fornecedor">{{ (n.nome_emitente or 'Fornecedor não identificado') | truncate(38) }}</span>
+            <span class="valor">R$ {{ n.valor_total | moeda }}</span>
+          </div>
+
+          <div class="veredito">
+            {% if n.status == 'aprovada' and n.tipo_operacao != 'compra' %}
+              {{ n.tipo_operacao | capitalize }} registrada — não altera estoque
+              nem contas a pagar.
+            {% elif n.status == 'aprovada' %}
+              Tudo certo — lançada no estoque e no contas a pagar.
+            {% elif n.status == 'bloqueada' %}
+              Segurada antes de virar despesa.
+            {% elif n.status == 'rejeitada' %}
+              Recusada: a nota tem problema no próprio documento.
+            {% elif n.status == 'cancelada' %}
+              Cancelada.
+            {% else %}
+              Recebida, aguardando conferência.
+            {% endif %}
+          </div>
+
+          {% if linha.motivos %}
+          <ul class="motivos">
+            {% for m in linha.motivos %}
+            <li class="{{ 'grave' if m.grave }}">
+              {{ m.texto }}
+              {% if m.valor %}<b>— R$ {{ m.valor | moeda }} a mais</b>{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          <a href="/notas/{{ n.id }}" class="detalhe">ver a nota inteira</a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% if total_notas > notas | length %}
+    <p class="ver-todas"><a href="/notas">ver todas as {{ total_notas }} notas →</a></p>
+    {% endif %}
+  </section>
+  {% else %}
+  <section class="vazio-simples">
+    <p>Nenhuma nota conferida ainda.</p>
+    <p class="texto-fraco">Clique em <b>Conferir notas agora</b> — os arquivos de
+    demonstração já estão esperando na pasta de entrada.</p>
+  </section>
+  {% endif %}
+
+</main>
+
+<footer class="rodape-simples">
+  Conferente · conferência automática de notas fiscais ·
+  <a href="/painel">sistema completo</a> ·
+  <a href="/docs">API</a>
+</footer>
+
+</body>
+</html>

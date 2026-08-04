@@ -13,7 +13,8 @@ from app.config import settings
 from app.database import SessionLocal
 from app.models import Empresa, ExecucaoJob
 from app.routers import (
-    auth, estoque, financeiro, fornecedores, jobs, notas, painel, pedidos, produtos,
+    auth, estoque, financeiro, fornecedores, jobs, notas, painel, pedidos,
+    produtos, simples,
 )
 from app.services.pipeline import executar_ciclo, fonte_configurada
 
@@ -103,9 +104,9 @@ app.add_middleware(SessionMiddleware, secret_key=settings.APP_SECRET,
 ESTATICOS = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(ESTATICOS)), name="static")
 
-for router in (auth.router, painel.router, produtos.router, fornecedores.router,
-               pedidos.router, notas.router, estoque.router, financeiro.router,
-               jobs.router):
+for router in (auth.router, simples.router, painel.router, produtos.router,
+               fornecedores.router, pedidos.router, notas.router, estoque.router,
+               financeiro.router, jobs.router):
     app.include_router(router)
 
 
