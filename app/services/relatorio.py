@@ -3,6 +3,7 @@
 Em máquinas sem as bibliotecas nativas do WeasyPrint (GTK no Windows), o
 relatório é salvo como HTML — documentado no README. No Docker sai em PDF.
 """
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -16,6 +17,10 @@ _env = Environment(
     loader=FileSystemLoader(Path(__file__).resolve().parent.parent / "templates"),
     autoescape=True,
 )
+
+# Onde os relatórios de ciclo são gravados (configurável para ambientes
+# com filesystem somente-leitura, como serverless).
+PASTA_RELATORIOS = Path(os.environ.get("PASTA_RELATORIOS", "./relatorios"))
 
 
 def gerar_relatorio_ciclo(db: Session, empresa: Empresa, resumo, inicio: datetime) -> Path:
@@ -41,9 +46,8 @@ def gerar_relatorio_ciclo(db: Session, empresa: Empresa, resumo, inicio: datetim
         bloqueadas=bloqueadas, rejeitadas=rejeitadas, quarentena=quarentena,
     )
 
-    pasta = Path("./relatorios")
-    pasta.mkdir(parents=True, exist_ok=True)
-    base = pasta / f"ciclo_{inicio.strftime('%Y%m%d_%H%M%S')}"
+    PASTA_RELATORIOS.mkdir(parents=True, exist_ok=True)
+    base = PASTA_RELATORIOS / f"ciclo_{inicio.strftime('%Y%m%d_%H%M%S')}"
 
     try:
         from weasyprint import HTML  # import tardio: depende de libs nativas

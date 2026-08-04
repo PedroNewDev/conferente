@@ -1,9 +1,12 @@
 """Recursos compartilhados pelos routers: templates e filtros de exibição."""
 from decimal import Decimal
+from pathlib import Path
 
 from fastapi.templating import Jinja2Templates
 
-templates = Jinja2Templates(directory="app/templates")
+# Caminho absoluto: o processo pode ser iniciado de qualquer diretório
+TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES))
 
 
 def moeda(valor) -> str:

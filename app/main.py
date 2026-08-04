@@ -1,6 +1,7 @@
 """Aplicação FastAPI: monta os routers, a sessão e o agendador."""
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, Request
@@ -99,7 +100,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=settings.APP_NOME, lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=settings.APP_SECRET,
                    session_cookie="conferente_sessao")
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+ESTATICOS = Path(__file__).resolve().parent / "static"
+app.mount("/static", StaticFiles(directory=str(ESTATICOS)), name="static")
 
 for router in (auth.router, painel.router, produtos.router, fornecedores.router,
                pedidos.router, notas.router, estoque.router, financeiro.router,
