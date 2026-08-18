@@ -99,7 +99,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.APP_NOME, lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=settings.APP_SECRET,
-                   session_cookie="conferente_sessao")
+                   session_cookie="conferente_sessao",
+                   https_only=settings.AMBIENTE == "producao",
+                   max_age=8 * 60 * 60)  # 8h — uma jornada de trabalho
 ESTATICOS = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(ESTATICOS)), name="static")
 
