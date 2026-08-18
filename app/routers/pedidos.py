@@ -12,6 +12,7 @@ from app.database import get_db
 from app.models import Fornecedor, PedidoCompra, PedidoItem, Produto, Usuario
 from app.routers.comum import templates
 from app.security import exige_papel, usuario_atual
+from app.utils.tempo import hoje
 
 router = APIRouter(tags=["pedidos"])
 
@@ -36,7 +37,7 @@ def lista(request: Request, status: str = "", db: Session = Depends(get_db),
     return templates.TemplateResponse(request, "pedidos/lista.html", {
         "usuario": usuario, "ativo": "pedidos", "pedidos": pedidos,
         "fornecedores": fornecedores, "status_filtro": status,
-        "hoje": date.today().isoformat(),
+        "hoje": hoje().isoformat(),
         "erro": request.query_params.get("erro"),
     })
 

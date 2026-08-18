@@ -1,5 +1,4 @@
 """Painel: indicadores do dia, divergências, estoque mínimo, vencimentos."""
-from datetime import date, datetime, time, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
@@ -14,12 +13,13 @@ from app.routers.comum import templates
 from app.security import usuario_atual
 from app.services.estoque import produtos_abaixo_do_minimo
 from app.services.financeiro import contas_a_vencer
+from app.utils.tempo import inicio_do_dia_utc
 
 router = APIRouter(tags=["painel"])
 
 
 def indicadores(db: Session, empresa_id: int) -> dict:
-    hoje_inicio = datetime.combine(date.today(), time.min).astimezone(timezone.utc)
+    hoje_inicio = inicio_do_dia_utc()
     notas_hoje = (db.query(NotaFiscal)
                   .filter(NotaFiscal.empresa_id == empresa_id,
                           NotaFiscal.recebida_em >= hoje_inicio)

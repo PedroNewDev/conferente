@@ -11,6 +11,7 @@ from app.models import ContaPagar, Usuario
 from app.routers.comum import templates
 from app.security import exige_papel, usuario_atual
 from app.services.financeiro import marcar_paga
+from app.utils.tempo import hoje
 
 router = APIRouter(tags=["financeiro"])
 
@@ -24,7 +25,7 @@ def contas(request: Request, status: str = "aberta", db: Session = Depends(get_d
     lista = consulta.order_by(ContaPagar.vencimento).limit(300).all()
     return templates.TemplateResponse(request, "financeiro/contas.html", {
         "usuario": usuario, "ativo": "financeiro", "contas": lista,
-        "status_filtro": status, "hoje": date.today(),
+        "status_filtro": status, "hoje": hoje(),
     })
 
 
@@ -33,7 +34,7 @@ def pagar(conta_id: int, data_pagamento: str = Form(""),
           db: Session = Depends(get_db),
           usuario: Usuario = Depends(exige_papel("financeiro")),
           _: None = Depends(verifica_csrf)):
-    quando = date.fromisoformat(data_pagamento) if data_pagamento else date.today()
+    quando = date.fromisoformat(data_pagamento) if data_pagamento else hoje()
     try:
         marcar_paga(db, usuario.empresa_id, conta_id, quando)
     except Exception:

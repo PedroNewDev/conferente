@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.enums import Severidade, StatusConta
 from app.models import ContaPagar, NotaFiscal
 from app.services.validacao import registrar_ocorrencia
+from app.utils.tempo import hoje
 
 
 def gerar_contas_a_pagar(db: Session, nota: NotaFiscal) -> list[ContaPagar]:
@@ -36,7 +37,7 @@ def gerar_contas_a_pagar(db: Session, nota: NotaFiscal) -> list[ContaPagar]:
 
 
 def contas_a_vencer(db: Session, empresa_id: int, dias: int) -> list[ContaPagar]:
-    limite = date.today() + timedelta(days=dias)
+    limite = hoje() + timedelta(days=dias)
     return (db.query(ContaPagar)
             .filter(ContaPagar.empresa_id == empresa_id,
                     ContaPagar.status == StatusConta.ABERTA.value,
