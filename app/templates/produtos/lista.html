@@ -3,6 +3,7 @@
 {% block titulo_pagina %}Produtos{% endblock %}
 
 {% block conteudo %}
+{% if erro %}<div class="aviso erro">{{ erro }}</div>{% endif %}
 <div class="cartao sem-borda-corpo">
   <form class="filtros" method="get" action="/produtos">
     <label class="campo" style="min-width:240px"><span>Buscar</span>

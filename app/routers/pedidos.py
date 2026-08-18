@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -35,6 +36,7 @@ def lista(request: Request, status: str = "", db: Session = Depends(get_db),
         "usuario": usuario, "ativo": "pedidos", "pedidos": pedidos,
         "fornecedores": fornecedores, "status_filtro": status,
         "hoje": date.today().isoformat(),
+        "erro": request.query_params.get("erro"),
     })
 
 
@@ -54,7 +56,13 @@ def criar(numero: str = Form(...), fornecedor_id: int = Form(...),
         frete_previsto=Decimal(frete_previsto or "0"),
         observacao=observacao.strip() or None)
     db.add(pedido)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            "/pedidos?erro=Já existe pedido cadastrado com este número.",
+            status_code=303)
     return RedirectResponse(f"/pedidos/{pedido.id}", status_code=303)
 
 

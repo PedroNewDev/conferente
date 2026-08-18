@@ -1,6 +1,7 @@
 """Cadastro de fornecedores."""
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -41,7 +42,13 @@ def criar(cnpj: str = Form(...), razao_social: str = Form(...),
                       uf=uf.strip().upper() or None,
                       municipio=municipio.strip() or None,
                       email=email.strip() or None))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            "/fornecedores?erro=Já existe fornecedor cadastrado com este CNPJ.",
+            status_code=303)
     return RedirectResponse("/fornecedores", status_code=303)
 
 

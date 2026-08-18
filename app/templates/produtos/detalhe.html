@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block conteudo %}
+{% if erro %}<div class="aviso erro">{{ erro }}</div>{% endif %}
 <div class="duas-colunas">
   <div class="cartao">
     <div class="cabecalho-cartao"><h2>Dados do produto</h2></div>

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -30,6 +31,7 @@ def lista(request: Request, busca: str = "", db: Session = Depends(get_db),
     produtos = consulta.order_by(Produto.descricao).all()
     return templates.TemplateResponse(request, "produtos/lista.html", {
         "usuario": usuario, "ativo": "produtos", "produtos": produtos, "busca": busca,
+        "erro": request.query_params.get("erro"),
     })
 
 
@@ -44,7 +46,13 @@ def criar(codigo_interno: str = Form(...), descricao: str = Form(...),
                    descricao=descricao.strip(), unidade=unidade.strip(),
                    ncm=ncm.strip() or None,
                    estoque_minimo=Decimal(estoque_minimo or "0")))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            "/produtos?erro=Já existe produto com este código interno.",
+            status_code=303)
     return RedirectResponse("/produtos", status_code=303)
 
 
@@ -61,6 +69,7 @@ def detalhe(produto_id: int, request: Request, db: Session = Depends(get_db),
     return templates.TemplateResponse(request, "produtos/detalhe.html", {
         "usuario": usuario, "ativo": "produtos", "produto": produto,
         "vinculos": vinculos, "fornecedores": fornecedores,
+        "erro": request.query_params.get("erro"),
     })
 
 
@@ -94,5 +103,11 @@ def criar_vinculo(produto_id: int, fornecedor_id: int = Form(...),
         fornecedor_id=fornecedor_id,
         codigo_no_fornecedor=codigo_no_fornecedor.strip(),
         ean=ean.strip() or None))
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return RedirectResponse(
+            f"/produtos/{produto_id}?erro=Já existe vínculo com este fornecedor e código.",
+            status_code=303)
     return RedirectResponse(f"/produtos/{produto_id}", status_code=303)
