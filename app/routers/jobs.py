@@ -1,5 +1,5 @@
 """Histórico de execuções, disparo manual do ciclo e API JSON."""
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
@@ -54,7 +54,7 @@ def api_nota(nota_id: int, db: Session = Depends(get_db),
     n = (db.query(NotaFiscal)
          .filter_by(id=nota_id, empresa_id=usuario.empresa_id).first())
     if not n:
-        return {"detalhe": "Nota não encontrada."}
+        raise HTTPException(404, "Nota não encontrada.")
     return {
         "id": n.id, "chave": n.chave, "numero": n.numero, "serie": n.serie,
         "status": n.status, "tipo_operacao": n.tipo_operacao,
