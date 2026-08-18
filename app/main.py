@@ -105,6 +105,19 @@ app.add_middleware(SessionMiddleware, secret_key=settings.APP_SECRET,
 ESTATICOS = Path(__file__).resolve().parent / "static"
 app.mount("/static", StaticFiles(directory=str(ESTATICOS)), name="static")
 
+
+@app.middleware("http")
+async def cabecalhos_seguranca(request: Request, chama_proximo):
+    """Cabeçalhos básicos de proteção do navegador: nada de sniff de
+    content-type, nada de embutir a aplicação num iframe alheio."""
+    resposta = await chama_proximo(request)
+    resposta.headers["X-Content-Type-Options"] = "nosniff"
+    resposta.headers["X-Frame-Options"] = "DENY"
+    resposta.headers["Referrer-Policy"] = "same-origin"
+    if settings.AMBIENTE == "producao":
+        resposta.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return resposta
+
 for router in (auth.router, painel.router, produtos.router, fornecedores.router,
                pedidos.router, notas.router, estoque.router, financeiro.router,
                jobs.router):
