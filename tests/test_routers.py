@@ -206,6 +206,18 @@ def test_ajuste_de_estoque(client, db, empresa):
     assert float(produto.estoque_atual) == 42
 
 
+def test_upload_xml_grande_demais_e_rejeitado(client, empresa):
+    from app.routers.notas import TAMANHO_MAXIMO_UPLOAD_BYTES
+
+    login(client)
+    token = csrf(client, "/notas")
+    conteudo_grande = b"0" * (TAMANHO_MAXIMO_UPLOAD_BYTES + 1)
+    r = client.post("/notas/upload", data={"csrf_token": token},
+                    files={"arquivo": ("nota.xml", conteudo_grande, "application/xml")})
+    assert r.status_code == 413
+    assert "limite" in r.text.lower()
+
+
 def test_resolver_ocorrencia(client, db, empresa):
     login(client)
     oc = Ocorrencia(empresa_id=empresa.id, tipo="C02", severidade="alerta",

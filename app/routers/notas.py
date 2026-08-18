@@ -24,6 +24,8 @@ from app.utils.formularios import ErroFormulario, data_do_form
 
 router = APIRouter(tags=["notas"])
 
+TAMANHO_MAXIMO_UPLOAD_BYTES = 5 * 1024 * 1024  # uma NF-e real não passa de poucos KB
+
 
 @router.get("/notas", response_class=HTMLResponse)
 def lista_notas(request: Request, status: str = "", fornecedor_id: int = 0,
@@ -174,7 +176,12 @@ async def upload_xml(request: Request, arquivo: UploadFile,
                      _: None = Depends(verifica_csrf)):
     """Upload manual de XML — usa a mesma pipeline do ciclo."""
     from app.models import Empresa
-    conteudo = await arquivo.read()
+    conteudo = await arquivo.read(TAMANHO_MAXIMO_UPLOAD_BYTES + 1)
+    if len(conteudo) > TAMANHO_MAXIMO_UPLOAD_BYTES:
+        return templates.TemplateResponse(request, "notas/upload_erro.html", {
+            "usuario": usuario, "ativo": "notas",
+            "erro": "Arquivo maior que o limite de 5MB para XML de NF-e.",
+        }, status_code=413)
     empresa = db.get(Empresa, usuario.empresa_id)
     parametro = db.query(Parametro).filter_by(empresa_id=usuario.empresa_id).one()
     documento = Documento(
