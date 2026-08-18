@@ -9,6 +9,7 @@ class Settings(BaseSettings):
 
     APP_NOME: str = "Conferente"
     APP_SECRET: str = "troque-esta-chave"
+    AMBIENTE: str = "desenvolvimento"  # desenvolvimento | producao
     DATABASE_URL: str = "sqlite:///./conferente.db"
 
     FONTE_DOCUMENTOS: str = "pasta"  # pasta | imap
@@ -40,7 +41,13 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    config = Settings()
+    if config.AMBIENTE == "producao" and config.APP_SECRET == "troque-esta-chave":
+        raise RuntimeError(
+            "APP_SECRET não foi alterado do valor padrão. "
+            "Defina uma chave própria antes de iniciar em produção."
+        )
+    return config
 
 
 settings = get_settings()
