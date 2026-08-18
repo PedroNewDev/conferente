@@ -1,7 +1,7 @@
 """Cadastro de produtos e de-para de códigos por fornecedor."""
 from decimal import Decimal
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -10,16 +10,10 @@ from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Fornecedor, Produto, ProdutoFornecedor, Usuario
 from app.routers.comum import templates
+from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
 
 router = APIRouter(tags=["produtos"])
-
-
-def _produto(db: Session, empresa_id: int, produto_id: int) -> Produto:
-    produto = db.query(Produto).filter_by(id=produto_id, empresa_id=empresa_id).first()
-    if not produto:
-        raise HTTPException(404, "Produto não encontrado.")
-    return produto
 
 
 @router.get("/produtos", response_class=HTMLResponse)
@@ -61,7 +55,7 @@ def criar(codigo_interno: str = Form(...), descricao: str = Form(...),
 @router.get("/produtos/{produto_id}", response_class=HTMLResponse)
 def detalhe(produto_id: int, request: Request, db: Session = Depends(get_db),
             usuario: Usuario = Depends(usuario_atual)):
-    produto = _produto(db, usuario.empresa_id, produto_id)
+    produto = obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
     vinculos = (db.query(ProdutoFornecedor)
                 .filter_by(empresa_id=usuario.empresa_id, produto_id=produto_id)
                 .all())
@@ -82,7 +76,7 @@ def editar(produto_id: int, descricao: str = Form(...), unidade: str = Form(...)
            db: Session = Depends(get_db),
            usuario: Usuario = Depends(exige_papel("comprador")),
            _: None = Depends(verifica_csrf)):
-    produto = _produto(db, usuario.empresa_id, produto_id)
+    produto = obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
     produto.descricao = descricao.strip()
     produto.unidade = unidade.strip()
     produto.ncm = ncm.strip() or None
@@ -98,10 +92,8 @@ def criar_vinculo(produto_id: int, fornecedor_id: int = Form(...),
                   db: Session = Depends(get_db),
                   usuario: Usuario = Depends(exige_papel("comprador")),
                   _: None = Depends(verifica_csrf)):
-    _produto(db, usuario.empresa_id, produto_id)
-    fornecedor = db.query(Fornecedor).filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first()
-    if not fornecedor:
-        raise HTTPException(404, "Fornecedor não encontrado.")
+    obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
+    obtem_ou_404(db, Fornecedor, fornecedor_id, usuario.empresa_id, "Fornecedor não encontrado.")
     db.add(ProdutoFornecedor(
         empresa_id=usuario.empresa_id, produto_id=produto_id,
         fornecedor_id=fornecedor_id,

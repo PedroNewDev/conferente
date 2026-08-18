@@ -11,17 +11,11 @@ from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Fornecedor, PedidoCompra, PedidoItem, Produto, Usuario
 from app.routers.comum import templates
+from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
 from app.utils.tempo import hoje
 
 router = APIRouter(tags=["pedidos"])
-
-
-def _pedido(db: Session, empresa_id: int, pedido_id: int) -> PedidoCompra:
-    pedido = db.query(PedidoCompra).filter_by(id=pedido_id, empresa_id=empresa_id).first()
-    if not pedido:
-        raise HTTPException(404, "Pedido não encontrado.")
-    return pedido
 
 
 @router.get("/pedidos", response_class=HTMLResponse)
@@ -49,9 +43,7 @@ def criar(numero: str = Form(...), fornecedor_id: int = Form(...),
           db: Session = Depends(get_db),
           usuario: Usuario = Depends(exige_papel("comprador")),
           _: None = Depends(verifica_csrf)):
-    fornecedor = db.query(Fornecedor).filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first()
-    if not fornecedor:
-        raise HTTPException(404, "Fornecedor não encontrado.")
+    obtem_ou_404(db, Fornecedor, fornecedor_id, usuario.empresa_id, "Fornecedor não encontrado.")
     pedido = PedidoCompra(
         empresa_id=usuario.empresa_id, numero=numero.strip(),
         fornecedor_id=fornecedor_id,
@@ -72,7 +64,7 @@ def criar(numero: str = Form(...), fornecedor_id: int = Form(...),
 @router.get("/pedidos/{pedido_id}", response_class=HTMLResponse)
 def detalhe(pedido_id: int, request: Request, db: Session = Depends(get_db),
             usuario: Usuario = Depends(usuario_atual)):
-    pedido = _pedido(db, usuario.empresa_id, pedido_id)
+    pedido = obtem_ou_404(db, PedidoCompra, pedido_id, usuario.empresa_id, "Pedido não encontrado.")
     produtos = (db.query(Produto)
                 .filter_by(empresa_id=usuario.empresa_id, ativo=True)
                 .order_by(Produto.descricao).all())
@@ -88,12 +80,10 @@ def adicionar_item(pedido_id: int, produto_id: int = Form(...),
                    db: Session = Depends(get_db),
                    usuario: Usuario = Depends(exige_papel("comprador")),
                    _: None = Depends(verifica_csrf)):
-    pedido = _pedido(db, usuario.empresa_id, pedido_id)
+    pedido = obtem_ou_404(db, PedidoCompra, pedido_id, usuario.empresa_id, "Pedido não encontrado.")
     if pedido.status not in ("aberto", "parcial"):
         raise HTTPException(400, "Só é possível incluir itens em pedido aberto.")
-    produto = db.query(Produto).filter_by(id=produto_id, empresa_id=usuario.empresa_id).first()
-    if not produto:
-        raise HTTPException(404, "Produto não encontrado.")
+    obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
     qtd = Decimal(quantidade)
     preco = Decimal(preco_unitario)
     db.add(PedidoItem(pedido_id=pedido.id, produto_id=produto_id,
@@ -108,7 +98,7 @@ def adicionar_item(pedido_id: int, produto_id: int = Form(...),
 def cancelar(pedido_id: int, db: Session = Depends(get_db),
              usuario: Usuario = Depends(exige_papel("comprador")),
              _: None = Depends(verifica_csrf)):
-    pedido = _pedido(db, usuario.empresa_id, pedido_id)
+    pedido = obtem_ou_404(db, PedidoCompra, pedido_id, usuario.empresa_id, "Pedido não encontrado.")
     if pedido.status == "atendido":
         raise HTTPException(400, "Pedido já atendido não pode ser cancelado.")
     pedido.status = "cancelado"

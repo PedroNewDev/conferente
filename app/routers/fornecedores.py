@@ -1,5 +1,5 @@
 """Cadastro de fornecedores."""
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -8,6 +8,7 @@ from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Fornecedor, Usuario
 from app.routers.comum import templates
+from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
 from app.utils.documentos import cnpj_valido, so_digitos
 
@@ -62,10 +63,8 @@ def editar(fornecedor_id: int, razao_social: str = Form(...),
            db: Session = Depends(get_db),
            usuario: Usuario = Depends(exige_papel("comprador")),
            _: None = Depends(verifica_csrf)):
-    fornecedor = (db.query(Fornecedor)
-                  .filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first())
-    if not fornecedor:
-        raise HTTPException(404, "Fornecedor não encontrado.")
+    fornecedor = obtem_ou_404(db, Fornecedor, fornecedor_id, usuario.empresa_id,
+                               "Fornecedor não encontrado.")
     fornecedor.razao_social = razao_social.strip()
     fornecedor.nome_fantasia = nome_fantasia.strip() or None
     fornecedor.uf = uf.strip().upper() or None

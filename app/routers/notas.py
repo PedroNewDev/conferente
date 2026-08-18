@@ -15,19 +15,13 @@ from app.models import (
     Fornecedor, NotaFiscal, Ocorrencia, Parametro, PedidoCompra, Usuario,
 )
 from app.routers.comum import templates
+from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
 from app.services.pipeline import ResumoCiclo, _processar_xml, aplicar_efeitos
 from app.services import conciliacao
 from app.services.validacao import registrar_ocorrencia, tem_bloqueante
 
 router = APIRouter(tags=["notas"])
-
-
-def _nota_da_empresa(db: Session, empresa_id: int, nota_id: int) -> NotaFiscal:
-    nota = db.query(NotaFiscal).filter_by(id=nota_id, empresa_id=empresa_id).first()
-    if not nota:
-        raise HTTPException(404, "Nota não encontrada.")
-    return nota
 
 
 @router.get("/notas", response_class=HTMLResponse)
@@ -67,7 +61,7 @@ def lista_notas(request: Request, status: str = "", fornecedor_id: int = 0,
 @router.get("/notas/{nota_id}", response_class=HTMLResponse)
 def detalhe_nota(nota_id: int, request: Request, db: Session = Depends(get_db),
                  usuario: Usuario = Depends(usuario_atual)):
-    nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
+    nota = obtem_ou_404(db, NotaFiscal, nota_id, usuario.empresa_id, "Nota não encontrada.")
     pedidos_abertos = (db.query(PedidoCompra)
                        .filter(PedidoCompra.empresa_id == usuario.empresa_id,
                                PedidoCompra.fornecedor_id == nota.fornecedor_id,
@@ -82,7 +76,7 @@ def detalhe_nota(nota_id: int, request: Request, db: Session = Depends(get_db),
 @router.get("/notas/{nota_id}/xml")
 def baixar_xml(nota_id: int, db: Session = Depends(get_db),
                usuario: Usuario = Depends(usuario_atual)):
-    nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
+    nota = obtem_ou_404(db, NotaFiscal, nota_id, usuario.empresa_id, "Nota não encontrada.")
     if not nota.xml_path or not Path(nota.xml_path).is_file():
         raise HTTPException(404, "XML não encontrado para esta nota.")
     return FileResponse(nota.xml_path, filename=f"{nota.chave}.xml",
@@ -96,7 +90,7 @@ def liberar_nota(nota_id: int, request: Request, justificativa: str = Form(...),
                  _: None = Depends(verifica_csrf)):
     """Libera nota bloqueada mediante justificativa; aplica os efeitos e
     registra quem liberou."""
-    nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
+    nota = obtem_ou_404(db, NotaFiscal, nota_id, usuario.empresa_id, "Nota não encontrada.")
     if nota.status != StatusNota.BLOQUEADA.value:
         raise HTTPException(400, "Só é possível liberar notas bloqueadas.")
     if not justificativa.strip():
@@ -124,7 +118,7 @@ def cancelar_nota(nota_id: int, motivo: str = Form(...),
                   db: Session = Depends(get_db),
                   usuario: Usuario = Depends(exige_papel("comprador")),
                   _: None = Depends(verifica_csrf)):
-    nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
+    nota = obtem_ou_404(db, NotaFiscal, nota_id, usuario.empresa_id, "Nota não encontrada.")
     if nota.status == StatusNota.APROVADA.value:
         raise HTTPException(400, "Nota aprovada não pode ser cancelada — os efeitos "
                                  "já foram aplicados.")
@@ -143,11 +137,8 @@ def vincular_pedido_manual(nota_id: int, pedido_id: int = Form(...),
                            usuario: Usuario = Depends(exige_papel("comprador")),
                            _: None = Depends(verifica_csrf)):
     """Vincula manualmente um pedido e reexecuta a conciliação."""
-    nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
-    pedido = (db.query(PedidoCompra)
-              .filter_by(id=pedido_id, empresa_id=usuario.empresa_id).first())
-    if not pedido:
-        raise HTTPException(404, "Pedido não encontrado.")
+    nota = obtem_ou_404(db, NotaFiscal, nota_id, usuario.empresa_id, "Nota não encontrada.")
+    pedido = obtem_ou_404(db, PedidoCompra, pedido_id, usuario.empresa_id, "Pedido não encontrado.")
     if nota.status not in (StatusNota.BLOQUEADA.value, StatusNota.VALIDADA.value):
         raise HTTPException(400, "Vínculo manual só para notas bloqueadas ou validadas.")
 
@@ -222,10 +213,8 @@ def resolver_ocorrencia(ocorrencia_id: int, observacao: str = Form(""),
                         db: Session = Depends(get_db),
                         usuario: Usuario = Depends(exige_papel("comprador", "financeiro")),
                         _: None = Depends(verifica_csrf)):
-    oc = (db.query(Ocorrencia)
-          .filter_by(id=ocorrencia_id, empresa_id=usuario.empresa_id).first())
-    if not oc:
-        raise HTTPException(404, "Ocorrência não encontrada.")
+    oc = obtem_ou_404(db, Ocorrencia, ocorrencia_id, usuario.empresa_id,
+                       "Ocorrência não encontrada.")
     oc.resolvida = True
     oc.resolvida_por = usuario.id
     oc.resolvida_em = datetime.now(timezone.utc)

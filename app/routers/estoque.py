@@ -9,6 +9,7 @@ from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import MovimentoEstoque, Produto, Usuario
 from app.routers.comum import templates
+from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
 from app.services.estoque import registrar_ajuste
 
@@ -29,10 +30,7 @@ def posicao(request: Request, db: Session = Depends(get_db),
 @router.get("/estoque/{produto_id}/movimentos", response_class=HTMLResponse)
 def movimentos(produto_id: int, request: Request, db: Session = Depends(get_db),
                usuario: Usuario = Depends(usuario_atual)):
-    produto = (db.query(Produto)
-               .filter_by(id=produto_id, empresa_id=usuario.empresa_id).first())
-    if not produto:
-        raise HTTPException(404, "Produto não encontrado.")
+    produto = obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
     extrato = (db.query(MovimentoEstoque)
                .filter_by(empresa_id=usuario.empresa_id, produto_id=produto_id)
                .order_by(MovimentoEstoque.criado_em.desc())
@@ -51,10 +49,7 @@ def ajuste(produto_id: int, novo_saldo: str = Form(...),
            _: None = Depends(verifica_csrf)):
     if not justificativa.strip():
         raise HTTPException(400, "Informe a justificativa do ajuste.")
-    produto = (db.query(Produto)
-               .filter_by(id=produto_id, empresa_id=usuario.empresa_id).first())
-    if not produto:
-        raise HTTPException(404, "Produto não encontrado.")
+    obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
     registrar_ajuste(db, usuario.empresa_id, produto_id,
                      Decimal(novo_saldo), usuario.id, justificativa.strip())
     db.commit()
