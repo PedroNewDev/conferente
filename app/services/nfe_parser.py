@@ -19,6 +19,12 @@ NS = {"nfe": "http://www.portalfiscal.inf.br/nfe"}
 PADRAO_PEDIDO_INFCPL = re.compile(r"\b(?:PEDIDO|PED\.?|OC)\s*[:\-]?\s*([A-Za-z0-9\-\/]+)",
                                   re.IGNORECASE)
 
+# Uma NF-e válida nunca declara DTD: o parser não resolve entidades nem
+# carrega DTD (externo ou interno), o que neutraliza XXE e "billion laughs"
+# em XML enviado por terceiros (upload manual, IMAP).
+_PARSER_SEGURO = etree.XMLParser(resolve_entities=False, no_network=True,
+                                 load_dtd=False, dtd_validation=False, huge_tree=False)
+
 
 class NFeParseError(Exception):
     """XML não pôde ser interpretado como NF-e."""
@@ -96,7 +102,7 @@ def _texto(no, caminho: str) -> str | None:
 def parse_nfe(conteudo: bytes) -> NotaFiscalNFe:
     """Interpreta o XML de uma NF-e e devolve a estrutura extraída."""
     try:
-        raiz = etree.fromstring(conteudo)
+        raiz = etree.fromstring(conteudo, parser=_PARSER_SEGURO)
     except etree.XMLSyntaxError as exc:
         raise NFeParseError(f"XML malformado: {exc}") from exc
 

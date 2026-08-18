@@ -38,6 +38,19 @@ def test_login_ok_e_acesso_liberado(client, empresa):
     assert r.status_code == 200
 
 
+def test_login_bloqueia_apos_tentativas_repetidas(client, empresa):
+    from app.rate_limit import MAX_TENTATIVAS
+
+    for _ in range(MAX_TENTATIVAS):
+        r = login(client, senha="errada")
+        assert r.status_code == 401
+
+    # a partir daqui, mesmo a senha correta é recusada — a chave está bloqueada
+    r = login(client)
+    assert r.status_code == 429
+    assert "Muitas tentativas" in r.text
+
+
 def test_rota_protegida_sem_sessao_redireciona_ao_login(client, empresa):
     r = client.get("/produtos", follow_redirects=False)
     assert r.status_code == 303

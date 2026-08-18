@@ -85,6 +85,17 @@ def test_raiz_inesperada():
         parse_nfe(b"<?xml version='1.0'?><outra/>")
 
 
+def test_entidade_xml_nao_e_expandida():
+    """XML com DOCTYPE declarando entidades (ataque XXE / "billion laughs")
+    não deve ter a entidade expandida — o parser deve ignorá-la ou falhar,
+    nunca substituir o conteúdo."""
+    payload = (b'<?xml version="1.0"?>'
+              b'<!DOCTYPE nfeProc [<!ENTITY bomba "AAAAAAAAAAAAAAAAAAAA">]>'
+              b'<nfeProc>&bomba;</nfeProc>')
+    with pytest.raises(NFeParseError):
+        parse_nfe(payload)
+
+
 def test_pedido_em_infcpl():
     nota = parse_nfe(_nota_padrao(inf_cpl="Ref. PEDIDO PC-1001. Entrega em 5 dias."))
     assert nota.numero_pedido_infcpl() == "PC-1001"

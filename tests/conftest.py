@@ -5,12 +5,22 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app import rate_limit
 from app.config import settings
 from app.database import Base, get_db
 from app.fontes.pasta import FontePasta
 from app.main import app
 from app.models import Empresa
 from scripts.seed import popular
+
+
+@pytest.fixture(autouse=True)
+def _limpa_rate_limit():
+    """Evita que o contador de tentativas de login (estado em memória,
+    global ao processo) vaze de um teste para o outro."""
+    rate_limit._tentativas.clear()
+    yield
+    rate_limit._tentativas.clear()
 
 
 @pytest.fixture
