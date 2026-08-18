@@ -44,6 +44,9 @@ def criar(numero: str = Form(...), fornecedor_id: int = Form(...),
           observacao: str = Form(""),
           db: Session = Depends(get_db),
           usuario: Usuario = Depends(exige_papel("comprador"))):
+    fornecedor = db.query(Fornecedor).filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first()
+    if not fornecedor:
+        raise HTTPException(404, "Fornecedor não encontrado.")
     pedido = PedidoCompra(
         empresa_id=usuario.empresa_id, numero=numero.strip(),
         fornecedor_id=fornecedor_id,
@@ -76,6 +79,9 @@ def adicionar_item(pedido_id: int, produto_id: int = Form(...),
     pedido = _pedido(db, usuario.empresa_id, pedido_id)
     if pedido.status not in ("aberto", "parcial"):
         raise HTTPException(400, "Só é possível incluir itens em pedido aberto.")
+    produto = db.query(Produto).filter_by(id=produto_id, empresa_id=usuario.empresa_id).first()
+    if not produto:
+        raise HTTPException(404, "Produto não encontrado.")
     qtd = Decimal(quantidade)
     preco = Decimal(preco_unitario)
     db.add(PedidoItem(pedido_id=pedido.id, produto_id=produto_id,

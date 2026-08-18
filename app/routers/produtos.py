@@ -86,6 +86,9 @@ def criar_vinculo(produto_id: int, fornecedor_id: int = Form(...),
                   db: Session = Depends(get_db),
                   usuario: Usuario = Depends(exige_papel("comprador"))):
     _produto(db, usuario.empresa_id, produto_id)
+    fornecedor = db.query(Fornecedor).filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first()
+    if not fornecedor:
+        raise HTTPException(404, "Fornecedor não encontrado.")
     db.add(ProdutoFornecedor(
         empresa_id=usuario.empresa_id, produto_id=produto_id,
         fornecedor_id=fornecedor_id,
