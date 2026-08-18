@@ -1,6 +1,4 @@
 """Contas a pagar: lista com filtros e baixa."""
-from datetime import date
-
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -11,6 +9,7 @@ from app.models import ContaPagar, Usuario
 from app.routers.comum import templates
 from app.security import exige_papel, usuario_atual
 from app.services.financeiro import marcar_paga
+from app.utils.formularios import ErroFormulario, data_do_form
 from app.utils.tempo import hoje
 
 router = APIRouter(tags=["financeiro"])
@@ -26,6 +25,7 @@ def contas(request: Request, status: str = "aberta", db: Session = Depends(get_d
     return templates.TemplateResponse(request, "financeiro/contas.html", {
         "usuario": usuario, "ativo": "financeiro", "contas": lista,
         "status_filtro": status, "hoje": hoje(),
+        "erro": request.query_params.get("erro"),
     })
 
 
@@ -34,7 +34,10 @@ def pagar(conta_id: int, data_pagamento: str = Form(""),
           db: Session = Depends(get_db),
           usuario: Usuario = Depends(exige_papel("financeiro")),
           _: None = Depends(verifica_csrf)):
-    quando = date.fromisoformat(data_pagamento) if data_pagamento else hoje()
+    try:
+        quando = data_do_form(data_pagamento, "data de pagamento") if data_pagamento else hoje()
+    except ErroFormulario as exc:
+        return RedirectResponse(f"/financeiro/contas?erro={exc}", status_code=303)
     try:
         marcar_paga(db, usuario.empresa_id, conta_id, quando)
     except Exception:

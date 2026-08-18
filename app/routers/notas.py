@@ -1,6 +1,6 @@
 """Notas fiscais: lista, detalhe, liberação, cancelamento, vínculo manual,
 upload de XML e fila de ocorrências."""
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile
@@ -20,6 +20,7 @@ from app.security import exige_papel, usuario_atual
 from app.services.pipeline import ResumoCiclo, _processar_xml, aplicar_efeitos
 from app.services import conciliacao
 from app.services.validacao import registrar_ocorrencia, tem_bloqueante
+from app.utils.formularios import ErroFormulario, data_do_form
 
 router = APIRouter(tags=["notas"])
 
@@ -34,10 +35,14 @@ def lista_notas(request: Request, status: str = "", fornecedor_id: int = 0,
         consulta = consulta.filter(NotaFiscal.status == status)
     if fornecedor_id:
         consulta = consulta.filter(NotaFiscal.fornecedor_id == fornecedor_id)
-    if inicio:
-        consulta = consulta.filter(NotaFiscal.data_emissao >= date.fromisoformat(inicio))
-    if fim:
-        consulta = consulta.filter(NotaFiscal.data_emissao <= date.fromisoformat(fim))
+    erro = None
+    try:
+        if inicio:
+            consulta = consulta.filter(NotaFiscal.data_emissao >= data_do_form(inicio, "início"))
+        if fim:
+            consulta = consulta.filter(NotaFiscal.data_emissao <= data_do_form(fim, "fim"))
+    except ErroFormulario as exc:
+        erro = str(exc)
     if busca:
         b = busca.strip()
         if b.isdigit() and len(b) == 44:
@@ -52,7 +57,7 @@ def lista_notas(request: Request, status: str = "", fornecedor_id: int = 0,
                     .order_by(Fornecedor.razao_social).all())
     return templates.TemplateResponse(request, "notas/lista.html", {
         "usuario": usuario, "ativo": "notas", "notas": notas,
-        "fornecedores": fornecedores,
+        "fornecedores": fornecedores, "erro": erro,
         "filtros": {"status": status, "fornecedor_id": fornecedor_id,
                     "inicio": inicio, "fim": fim, "busca": busca},
     })

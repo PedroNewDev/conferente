@@ -11,6 +11,7 @@
 {% endblock %}
 
 {% block conteudo %}
+{% if erro %}<div class="aviso erro">{{ erro }}</div>{% endif %}
 <div class="cartao sem-borda-corpo">
   <form class="filtros" method="get" action="/notas">
     <label class="campo"><span>Status</span>

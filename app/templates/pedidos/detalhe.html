@@ -14,6 +14,7 @@
 {% endblock %}
 
 {% block conteudo %}
+{% if erro %}<div class="aviso erro">{{ erro }}</div>{% endif %}
 <div class="cartao">
   <div class="corpo-cartao">
     <div class="formulario-linha">

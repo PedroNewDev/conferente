@@ -1,6 +1,4 @@
 """Cadastro de produtos e de-para de códigos por fornecedor."""
-from decimal import Decimal
-
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.exc import IntegrityError
@@ -12,6 +10,7 @@ from app.models import Fornecedor, Produto, ProdutoFornecedor, Usuario
 from app.routers.comum import templates
 from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
+from app.utils.formularios import ErroFormulario, decimal_do_form
 
 router = APIRouter(tags=["produtos"])
 
@@ -37,11 +36,15 @@ def criar(codigo_interno: str = Form(...), descricao: str = Form(...),
           db: Session = Depends(get_db),
           usuario: Usuario = Depends(exige_papel("comprador")),
           _: None = Depends(verifica_csrf)):
+    try:
+        minimo = decimal_do_form(estoque_minimo or "0", "estoque mínimo")
+    except ErroFormulario as exc:
+        return RedirectResponse(f"/produtos?erro={exc}", status_code=303)
     db.add(Produto(empresa_id=usuario.empresa_id,
                    codigo_interno=codigo_interno.strip(),
                    descricao=descricao.strip(), unidade=unidade.strip(),
                    ncm=ncm.strip() or None,
-                   estoque_minimo=Decimal(estoque_minimo or "0")))
+                   estoque_minimo=minimo))
     try:
         db.commit()
     except IntegrityError:
@@ -77,10 +80,14 @@ def editar(produto_id: int, descricao: str = Form(...), unidade: str = Form(...)
            usuario: Usuario = Depends(exige_papel("comprador")),
            _: None = Depends(verifica_csrf)):
     produto = obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
+    try:
+        minimo = decimal_do_form(estoque_minimo or "0", "estoque mínimo")
+    except ErroFormulario as exc:
+        return RedirectResponse(f"/produtos/{produto_id}?erro={exc}", status_code=303)
     produto.descricao = descricao.strip()
     produto.unidade = unidade.strip()
     produto.ncm = ncm.strip() or None
-    produto.estoque_minimo = Decimal(estoque_minimo or "0")
+    produto.estoque_minimo = minimo
     produto.ativo = ativo == "sim"
     db.commit()
     return RedirectResponse(f"/produtos/{produto_id}", status_code=303)

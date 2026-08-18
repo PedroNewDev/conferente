@@ -1,6 +1,4 @@
 """Posição de estoque, extrato de movimentos e ajuste manual."""
-from decimal import Decimal
-
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -12,6 +10,7 @@ from app.routers.comum import templates
 from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
 from app.services.estoque import registrar_ajuste
+from app.utils.formularios import ErroFormulario, decimal_do_form
 
 router = APIRouter(tags=["estoque"])
 
@@ -37,7 +36,7 @@ def movimentos(produto_id: int, request: Request, db: Session = Depends(get_db),
                .limit(200).all())
     return templates.TemplateResponse(request, "estoque/movimentos.html", {
         "usuario": usuario, "ativo": "estoque", "produto": produto,
-        "movimentos": extrato,
+        "movimentos": extrato, "erro": request.query_params.get("erro"),
     })
 
 
@@ -50,7 +49,11 @@ def ajuste(produto_id: int, novo_saldo: str = Form(...),
     if not justificativa.strip():
         raise HTTPException(400, "Informe a justificativa do ajuste.")
     obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
+    try:
+        saldo = decimal_do_form(novo_saldo, "novo saldo")
+    except ErroFormulario as exc:
+        return RedirectResponse(f"/estoque/{produto_id}/movimentos?erro={exc}", status_code=303)
     registrar_ajuste(db, usuario.empresa_id, produto_id,
-                     Decimal(novo_saldo), usuario.id, justificativa.strip())
+                     saldo, usuario.id, justificativa.strip())
     db.commit()
     return RedirectResponse(f"/estoque/{produto_id}/movimentos", status_code=303)

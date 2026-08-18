@@ -87,6 +87,33 @@ def test_criar_produto_duplicado_mostra_erro_amigavel(client, db, empresa):
     assert "já existe" in r.text.lower()
 
 
+def test_criar_produto_estoque_minimo_invalido_mostra_erro_amigavel(client, empresa):
+    login(client)
+    token = csrf(client, "/produtos")
+    r = client.post("/produtos", data={
+        "codigo_interno": "NOVO-2", "descricao": "Produto novo", "unidade": "UN",
+        "estoque_minimo": "não-é-numero", "csrf_token": token,
+    }, follow_redirects=False)
+    assert r.status_code == 303
+    assert "erro=" in r.headers["location"]
+    r = client.get(r.headers["location"])
+    assert "inválido" in r.text.lower()
+
+
+def test_pedido_com_data_invalida_mostra_erro_amigavel(client, db, empresa):
+    login(client)
+    fornecedor = db.query(Fornecedor).filter_by(empresa_id=empresa.id).first()
+    token = csrf(client, "/pedidos")
+    r = client.post("/pedidos", data={
+        "numero": "PC-DATA-INVALIDA", "fornecedor_id": str(fornecedor.id),
+        "data_emissao": "31-13-2026", "csrf_token": token,
+    }, follow_redirects=False)
+    assert r.status_code == 303
+    assert "erro=" in r.headers["location"]
+    r = client.get("/pedidos")
+    assert "PC-DATA-INVALIDA" not in r.text
+
+
 def test_criar_fornecedor_cnpj_invalido(client, empresa):
     login(client)
     token = csrf(client, "/fornecedores")

@@ -1,5 +1,4 @@
 """Pedidos de compra e seus itens."""
-from datetime import date
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -13,6 +12,7 @@ from app.models import Fornecedor, PedidoCompra, PedidoItem, Produto, Usuario
 from app.routers.comum import templates
 from app.scoping import obtem_ou_404
 from app.security import exige_papel, usuario_atual
+from app.utils.formularios import ErroFormulario, data_do_form, decimal_do_form
 from app.utils.tempo import hoje
 
 router = APIRouter(tags=["pedidos"])
@@ -44,11 +44,16 @@ def criar(numero: str = Form(...), fornecedor_id: int = Form(...),
           usuario: Usuario = Depends(exige_papel("comprador")),
           _: None = Depends(verifica_csrf)):
     obtem_ou_404(db, Fornecedor, fornecedor_id, usuario.empresa_id, "Fornecedor não encontrado.")
+    try:
+        emissao = data_do_form(data_emissao, "data de emissão")
+        frete = decimal_do_form(frete_previsto or "0", "frete previsto")
+    except ErroFormulario as exc:
+        return RedirectResponse(f"/pedidos?erro={exc}", status_code=303)
     pedido = PedidoCompra(
         empresa_id=usuario.empresa_id, numero=numero.strip(),
         fornecedor_id=fornecedor_id,
-        data_emissao=date.fromisoformat(data_emissao),
-        frete_previsto=Decimal(frete_previsto or "0"),
+        data_emissao=emissao,
+        frete_previsto=frete,
         observacao=observacao.strip() or None)
     db.add(pedido)
     try:
@@ -70,7 +75,7 @@ def detalhe(pedido_id: int, request: Request, db: Session = Depends(get_db),
                 .order_by(Produto.descricao).all())
     return templates.TemplateResponse(request, "pedidos/detalhe.html", {
         "usuario": usuario, "ativo": "pedidos", "pedido": pedido,
-        "produtos": produtos,
+        "produtos": produtos, "erro": request.query_params.get("erro"),
     })
 
 
@@ -84,8 +89,11 @@ def adicionar_item(pedido_id: int, produto_id: int = Form(...),
     if pedido.status not in ("aberto", "parcial"):
         raise HTTPException(400, "Só é possível incluir itens em pedido aberto.")
     obtem_ou_404(db, Produto, produto_id, usuario.empresa_id, "Produto não encontrado.")
-    qtd = Decimal(quantidade)
-    preco = Decimal(preco_unitario)
+    try:
+        qtd = decimal_do_form(quantidade, "quantidade")
+        preco = decimal_do_form(preco_unitario, "preço unitário")
+    except ErroFormulario as exc:
+        return RedirectResponse(f"/pedidos/{pedido_id}?erro={exc}", status_code=303)
     db.add(PedidoItem(pedido_id=pedido.id, produto_id=produto_id,
                       quantidade=qtd, preco_unitario=preco,
                       valor_total=(qtd * preco).quantize(Decimal("0.01"))))
