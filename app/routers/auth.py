@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Usuario
 from app.routers.comum import templates
@@ -32,7 +33,7 @@ def entrar(request: Request, email: str = Form(...), senha: str = Form(...),
     return RedirectResponse("/", status_code=303)
 
 
-@router.get("/logout")
-def sair(request: Request):
+@router.post("/logout")
+def sair(request: Request, _: None = Depends(verifica_csrf)):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)

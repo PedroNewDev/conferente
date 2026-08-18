@@ -30,7 +30,10 @@
     <div class="rodape-lateral">
       <b>{{ usuario.nome }}</b>
       {{ usuario.papel | capitalize }} ·
-      <a href="/logout">{{ 'Trocar de usuário' if acesso_livre else 'Sair' }}</a>
+      <form method="post" action="/logout" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button type="submit" class="botao-link">{{ 'Trocar de usuário' if acesso_livre else 'Sair' }}</button>
+      </form>
     </div>
   </aside>
 
