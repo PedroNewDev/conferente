@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Fornecedor, Usuario
 from app.routers.comum import templates
@@ -30,7 +31,8 @@ def criar(cnpj: str = Form(...), razao_social: str = Form(...),
           nome_fantasia: str = Form(""), uf: str = Form(""),
           municipio: str = Form(""), email: str = Form(""),
           db: Session = Depends(get_db),
-          usuario: Usuario = Depends(exige_papel("comprador"))):
+          usuario: Usuario = Depends(exige_papel("comprador")),
+          _: None = Depends(verifica_csrf)):
     digitos = so_digitos(cnpj)
     if not cnpj_valido(digitos):
         return RedirectResponse(
@@ -58,7 +60,8 @@ def editar(fornecedor_id: int, razao_social: str = Form(...),
            municipio: str = Form(""), email: str = Form(""),
            ativo: str = Form("sim"),
            db: Session = Depends(get_db),
-           usuario: Usuario = Depends(exige_papel("comprador"))):
+           usuario: Usuario = Depends(exige_papel("comprador")),
+           _: None = Depends(verifica_csrf)):
     fornecedor = (db.query(Fornecedor)
                   .filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first())
     if not fornecedor:

@@ -16,6 +16,7 @@
     justificativa e fica registrada com o seu nome.
     <form method="post" action="/notas/{{ nota.id }}/liberar"
           class="formulario-linha" style="margin-top:12px">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo" style="flex:3"><span>Justificativa da liberação</span>
         <input type="text" name="justificativa" required
                placeholder="Ex.: reajuste autorizado pelo comprador em 02/08"></label>
@@ -27,6 +28,7 @@
     <hr class="separador">
     <form method="post" action="/notas/{{ nota.id }}/vincular-pedido"
           class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo" style="flex:2"><span>Vincular a outro pedido e reconciliar</span>
         <select name="pedido_id">
           {% for p in pedidos_abertos %}
@@ -156,6 +158,7 @@
   <summary>Cancelar esta nota</summary>
   <form method="post" action="/notas/{{ nota.id }}/cancelar"
         class="formulario-linha" style="margin-top:12px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
     <label class="campo" style="flex:3"><span>Motivo do cancelamento</span>
       <input type="text" name="motivo" required></label>
     <button class="botao perigo" type="submit"

@@ -6,6 +6,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Fornecedor, Produto, ProdutoFornecedor, Usuario
 from app.routers.comum import templates
@@ -40,7 +41,8 @@ def criar(codigo_interno: str = Form(...), descricao: str = Form(...),
           unidade: str = Form(...), ncm: str = Form(""),
           estoque_minimo: str = Form("0"),
           db: Session = Depends(get_db),
-          usuario: Usuario = Depends(exige_papel("comprador"))):
+          usuario: Usuario = Depends(exige_papel("comprador")),
+          _: None = Depends(verifica_csrf)):
     db.add(Produto(empresa_id=usuario.empresa_id,
                    codigo_interno=codigo_interno.strip(),
                    descricao=descricao.strip(), unidade=unidade.strip(),
@@ -78,7 +80,8 @@ def editar(produto_id: int, descricao: str = Form(...), unidade: str = Form(...)
            ncm: str = Form(""), estoque_minimo: str = Form("0"),
            ativo: str = Form("sim"),
            db: Session = Depends(get_db),
-           usuario: Usuario = Depends(exige_papel("comprador"))):
+           usuario: Usuario = Depends(exige_papel("comprador")),
+           _: None = Depends(verifica_csrf)):
     produto = _produto(db, usuario.empresa_id, produto_id)
     produto.descricao = descricao.strip()
     produto.unidade = unidade.strip()
@@ -93,7 +96,8 @@ def editar(produto_id: int, descricao: str = Form(...), unidade: str = Form(...)
 def criar_vinculo(produto_id: int, fornecedor_id: int = Form(...),
                   codigo_no_fornecedor: str = Form(...), ean: str = Form(""),
                   db: Session = Depends(get_db),
-                  usuario: Usuario = Depends(exige_papel("comprador"))):
+                  usuario: Usuario = Depends(exige_papel("comprador")),
+                  _: None = Depends(verifica_csrf)):
     _produto(db, usuario.empresa_id, produto_id)
     fornecedor = db.query(Fornecedor).filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first()
     if not fornecedor:

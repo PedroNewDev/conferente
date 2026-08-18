@@ -12,6 +12,7 @@
     <div class="cabecalho-cartao"><h2>Dados do produto</h2></div>
     <div class="corpo-cartao">
       <form method="post" action="/produtos/{{ produto.id }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
         <label class="campo"><span>Descrição</span>
           <input type="text" name="descricao" value="{{ produto.descricao }}" required></label>
         <div class="formulario-linha">
@@ -69,6 +70,7 @@
   <div class="corpo-cartao" style="border-top:1px solid var(--linha)">
     <form method="post" action="/produtos/{{ produto.id }}/vinculos"
           class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo" style="flex:2"><span>Fornecedor</span>
         <select name="fornecedor_id" required>
           {% for f in fornecedores %}

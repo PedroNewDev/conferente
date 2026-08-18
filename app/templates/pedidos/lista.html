@@ -45,6 +45,7 @@
   <div class="cabecalho-cartao"><h2>Novo pedido</h2></div>
   <div class="corpo-cartao">
     <form method="post" action="/pedidos" class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo"><span>Número</span>
         <input type="text" name="numero" required placeholder="PC-0000"></label>
       <label class="campo" style="flex:2"><span>Fornecedor</span>

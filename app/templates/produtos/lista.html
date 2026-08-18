@@ -43,6 +43,7 @@
   <div class="cabecalho-cartao"><h2>Novo produto</h2></div>
   <div class="corpo-cartao">
     <form method="post" action="/produtos" class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo"><span>Código interno</span>
         <input type="text" name="codigo_interno" required></label>
       <label class="campo" style="flex:2"><span>Descrição</span>

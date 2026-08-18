@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import MovimentoEstoque, Produto, Usuario
 from app.routers.comum import templates
@@ -46,7 +47,8 @@ def movimentos(produto_id: int, request: Request, db: Session = Depends(get_db),
 def ajuste(produto_id: int, novo_saldo: str = Form(...),
            justificativa: str = Form(...),
            db: Session = Depends(get_db),
-           usuario: Usuario = Depends(exige_papel("comprador"))):
+           usuario: Usuario = Depends(exige_papel("comprador")),
+           _: None = Depends(verifica_csrf)):
     if not justificativa.strip():
         raise HTTPException(400, "Informe a justificativa do ajuste.")
     produto = (db.query(Produto)

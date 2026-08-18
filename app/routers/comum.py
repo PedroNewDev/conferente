@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi.templating import Jinja2Templates
 
 from app.config import settings
+from app.csrf import csrf_token
 
 # Caminho absoluto: o processo pode ser iniciado de qualquer diretório
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
@@ -61,6 +62,7 @@ templates.env.filters["data_hora_br"] = data_hora_br
 templates.env.filters["cnpj"] = cnpj_fmt
 
 templates.env.globals["acesso_livre"] = settings.ACESSO_LIVRE
+templates.env.globals["csrf_token"] = csrf_token
 
 ROTULOS_STATUS_NOTA = {
     "recebida": "Recebida", "rejeitada": "Rejeitada", "validada": "Validada",

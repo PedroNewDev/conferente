@@ -3,6 +3,7 @@
 {% block titulo_pagina %}Histórico de execuções{% endblock %}
 {% block acoes_topo %}
   <form method="post" action="/jobs/executar-ciclo">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
     <button class="botao" type="submit">▶ Executar ciclo agora</button>
   </form>
 {% endblock %}

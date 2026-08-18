@@ -40,6 +40,7 @@
   <div class="corpo-cartao">
     <form method="post" action="/estoque/{{ produto.id }}/ajuste"
           class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo"><span>Novo saldo</span>
         <input type="number" name="novo_saldo" step="0.0001"
                value="{{ produto.estoque_atual }}" required></label>

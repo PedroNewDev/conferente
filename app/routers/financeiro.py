@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import ContaPagar, Usuario
 from app.routers.comum import templates
@@ -30,7 +31,8 @@ def contas(request: Request, status: str = "aberta", db: Session = Depends(get_d
 @router.post("/financeiro/contas/{conta_id}/pagar")
 def pagar(conta_id: int, data_pagamento: str = Form(""),
           db: Session = Depends(get_db),
-          usuario: Usuario = Depends(exige_papel("financeiro"))):
+          usuario: Usuario = Depends(exige_papel("financeiro")),
+          _: None = Depends(verifica_csrf)):
     quando = date.fromisoformat(data_pagamento) if data_pagamento else date.today()
     try:
         marcar_paga(db, usuario.empresa_id, conta_id, quando)

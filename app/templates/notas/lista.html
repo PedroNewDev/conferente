@@ -4,6 +4,7 @@
 {% block acoes_topo %}
   <form method="post" action="/notas/upload" enctype="multipart/form-data"
         style="display:flex; gap:8px; align-items:center">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
     <input type="file" name="arquivo" accept=".xml" required style="max-width:220px">
     <button class="botao secundario pequeno" type="submit">Enviar XML</button>
   </form>

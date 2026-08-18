@@ -6,6 +6,7 @@
   <span class="selo {{ pedido.status }}">{{ pedido.status | capitalize }}</span>
   {% if pedido.status in ('aberto', 'parcial') %}
   <form method="post" action="/pedidos/{{ pedido.id }}/cancelar">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
     <button class="botao perigo pequeno" type="submit"
             onclick="return confirm('Cancelar este pedido?')">Cancelar</button>
   </form>
@@ -51,6 +52,7 @@
   <div class="corpo-cartao" style="border-top:1px solid var(--linha)">
     <form method="post" action="/pedidos/{{ pedido.id }}/itens"
           class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo" style="flex:2"><span>Produto</span>
         <select name="produto_id" required>
           {% for p in produtos %}

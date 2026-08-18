@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import Fornecedor, PedidoCompra, PedidoItem, Produto, Usuario
 from app.routers.comum import templates
@@ -45,7 +46,8 @@ def criar(numero: str = Form(...), fornecedor_id: int = Form(...),
           data_emissao: str = Form(...), frete_previsto: str = Form("0"),
           observacao: str = Form(""),
           db: Session = Depends(get_db),
-          usuario: Usuario = Depends(exige_papel("comprador"))):
+          usuario: Usuario = Depends(exige_papel("comprador")),
+          _: None = Depends(verifica_csrf)):
     fornecedor = db.query(Fornecedor).filter_by(id=fornecedor_id, empresa_id=usuario.empresa_id).first()
     if not fornecedor:
         raise HTTPException(404, "Fornecedor não encontrado.")
@@ -83,7 +85,8 @@ def detalhe(pedido_id: int, request: Request, db: Session = Depends(get_db),
 def adicionar_item(pedido_id: int, produto_id: int = Form(...),
                    quantidade: str = Form(...), preco_unitario: str = Form(...),
                    db: Session = Depends(get_db),
-                   usuario: Usuario = Depends(exige_papel("comprador"))):
+                   usuario: Usuario = Depends(exige_papel("comprador")),
+                   _: None = Depends(verifica_csrf)):
     pedido = _pedido(db, usuario.empresa_id, pedido_id)
     if pedido.status not in ("aberto", "parcial"):
         raise HTTPException(400, "Só é possível incluir itens em pedido aberto.")
@@ -102,7 +105,8 @@ def adicionar_item(pedido_id: int, produto_id: int = Form(...),
 
 @router.post("/pedidos/{pedido_id}/cancelar")
 def cancelar(pedido_id: int, db: Session = Depends(get_db),
-             usuario: Usuario = Depends(exige_papel("comprador"))):
+             usuario: Usuario = Depends(exige_papel("comprador")),
+             _: None = Depends(verifica_csrf)):
     pedido = _pedido(db, usuario.empresa_id, pedido_id)
     if pedido.status == "atendido":
         raise HTTPException(400, "Pedido já atendido não pode ser cancelado.")

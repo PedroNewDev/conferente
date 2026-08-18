@@ -25,6 +25,7 @@
       <td>
         <form method="post" action="/ocorrencias/{{ oc.id }}/resolver"
               class="acoes-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
           <input type="text" name="observacao" placeholder="Observação"
                  style="width:150px; font-size:12.5px; padding:4px 8px">
           <button class="botao secundario pequeno" type="submit">Resolver</button>

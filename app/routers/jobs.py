@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.models import ExecucaoJob, NotaFiscal, Ocorrencia, Produto, Usuario
 from app.routers.comum import templates
@@ -27,7 +28,8 @@ def historico(request: Request, db: Session = Depends(get_db),
 
 @router.post("/jobs/executar-ciclo")
 def executar_agora(db: Session = Depends(get_db),
-                   usuario: Usuario = Depends(exige_papel("comprador"))):
+                   usuario: Usuario = Depends(exige_papel("comprador")),
+                   _: None = Depends(verifica_csrf)):
     """O botão da demonstração: dispara um ciclo imediatamente."""
     executar_ciclo(db, usuario.empresa_id, fonte_configurada())
     return RedirectResponse("/jobs", status_code=303)

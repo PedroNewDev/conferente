@@ -31,6 +31,7 @@
   <div class="cabecalho-cartao"><h2>Novo fornecedor</h2></div>
   <div class="corpo-cartao">
     <form method="post" action="/fornecedores" class="formulario-linha">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
       <label class="campo"><span>CNPJ</span>
         <input type="text" name="cnpj" required placeholder="00.000.000/0000-00"></label>
       <label class="campo" style="flex:2"><span>Razão social</span>

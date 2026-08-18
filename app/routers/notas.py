@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
+from app.csrf import verifica_csrf
 from app.database import get_db
 from app.enums import Severidade, StatusNota
 from app.fontes.base import Anexo, Documento
@@ -90,7 +91,8 @@ def baixar_xml(nota_id: int, db: Session = Depends(get_db),
 @router.post("/notas/{nota_id}/liberar")
 def liberar_nota(nota_id: int, request: Request, justificativa: str = Form(...),
                  db: Session = Depends(get_db),
-                 usuario: Usuario = Depends(exige_papel("comprador"))):
+                 usuario: Usuario = Depends(exige_papel("comprador")),
+                 _: None = Depends(verifica_csrf)):
     """Libera nota bloqueada mediante justificativa; aplica os efeitos e
     registra quem liberou."""
     nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
@@ -119,7 +121,8 @@ def liberar_nota(nota_id: int, request: Request, justificativa: str = Form(...),
 @router.post("/notas/{nota_id}/cancelar")
 def cancelar_nota(nota_id: int, motivo: str = Form(...),
                   db: Session = Depends(get_db),
-                  usuario: Usuario = Depends(exige_papel("comprador"))):
+                  usuario: Usuario = Depends(exige_papel("comprador")),
+                  _: None = Depends(verifica_csrf)):
     nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
     if nota.status == StatusNota.APROVADA.value:
         raise HTTPException(400, "Nota aprovada não pode ser cancelada — os efeitos "
@@ -136,7 +139,8 @@ def cancelar_nota(nota_id: int, motivo: str = Form(...),
 @router.post("/notas/{nota_id}/vincular-pedido")
 def vincular_pedido_manual(nota_id: int, pedido_id: int = Form(...),
                            db: Session = Depends(get_db),
-                           usuario: Usuario = Depends(exige_papel("comprador"))):
+                           usuario: Usuario = Depends(exige_papel("comprador")),
+                           _: None = Depends(verifica_csrf)):
     """Vincula manualmente um pedido e reexecuta a conciliação."""
     nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
     pedido = (db.query(PedidoCompra)
@@ -169,7 +173,8 @@ def vincular_pedido_manual(nota_id: int, pedido_id: int = Form(...),
 @router.post("/notas/upload")
 async def upload_xml(request: Request, arquivo: UploadFile,
                      db: Session = Depends(get_db),
-                     usuario: Usuario = Depends(exige_papel("comprador"))):
+                     usuario: Usuario = Depends(exige_papel("comprador")),
+                     _: None = Depends(verifica_csrf)):
     """Upload manual de XML — usa a mesma pipeline do ciclo."""
     from app.models import Empresa
     conteudo = await arquivo.read()
@@ -214,7 +219,8 @@ def lista_ocorrencias(request: Request, db: Session = Depends(get_db),
 @router.post("/ocorrencias/{ocorrencia_id}/resolver")
 def resolver_ocorrencia(ocorrencia_id: int, observacao: str = Form(""),
                         db: Session = Depends(get_db),
-                        usuario: Usuario = Depends(exige_papel("comprador", "financeiro"))):
+                        usuario: Usuario = Depends(exige_papel("comprador", "financeiro")),
+                        _: None = Depends(verifica_csrf)):
     oc = (db.query(Ocorrencia)
           .filter_by(id=ocorrencia_id, empresa_id=usuario.empresa_id).first())
     if not oc:
