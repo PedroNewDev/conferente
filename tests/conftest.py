@@ -1,12 +1,14 @@
 """Fixtures compartilhadas: banco em memória, seed e fonte de pasta temporária."""
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.config import settings
-from app.database import Base
+from app.database import Base, get_db
 from app.fontes.pasta import FontePasta
+from app.main import app
 from app.models import Empresa
 from scripts.seed import popular
 
@@ -42,3 +44,16 @@ def empresa(db) -> Empresa:
 def fonte(tmp_path) -> FontePasta:
     return FontePasta(str(tmp_path / "novos"), str(tmp_path / "processados"),
                       str(tmp_path / "quarentena"))
+
+
+@pytest.fixture
+def client(db):
+    """TestClient com o app apontando para a sessão de teste (SQLite em
+    memória) em vez do banco real. Não entra no lifespan — o agendador
+    não é iniciado."""
+    def _get_db_override():
+        yield db
+
+    app.dependency_overrides[get_db] = _get_db_override
+    yield TestClient(app)
+    app.dependency_overrides.clear()
