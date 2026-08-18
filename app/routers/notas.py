@@ -1,6 +1,7 @@
 """Notas fiscais: lista, detalhe, liberação, cancelamento, vínculo manual,
 upload de XML e fila de ocorrências."""
 from datetime import date, datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
@@ -82,8 +83,8 @@ def detalhe_nota(nota_id: int, request: Request, db: Session = Depends(get_db),
 def baixar_xml(nota_id: int, db: Session = Depends(get_db),
                usuario: Usuario = Depends(usuario_atual)):
     nota = _nota_da_empresa(db, usuario.empresa_id, nota_id)
-    if not nota.xml_path:
-        raise HTTPException(404, "XML não arquivado para esta nota.")
+    if not nota.xml_path or not Path(nota.xml_path).is_file():
+        raise HTTPException(404, "XML não encontrado para esta nota.")
     return FileResponse(nota.xml_path, filename=f"{nota.chave}.xml",
                         media_type="application/xml")
 
