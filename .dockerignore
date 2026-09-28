@@ -1,0 +1,11 @@
+.git
+.env
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.vercel
+conferente.db
+servidor.log

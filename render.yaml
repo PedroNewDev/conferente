@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: conferente
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /saude
+    envVars:
+      - key: APP_SECRET
+        generateValue: true
+      - key: AMBIENTE
+        value: producao
+      - key: DATABASE_URL
+        value: sqlite:////app/dados/conferente.db
+      - key: ACESSO_LIVRE
+        value: "true"
+      - key: AGENDADOR_ATIVO
+        value: "true"
+      - key: FONTE_DOCUMENTOS
+        value: pasta
+      - key: PASTA_ENTRADA
+        value: /app/entrada/novos
+      - key: PASTA_PROCESSADOS
+        value: /app/entrada/processados
+      - key: PASTA_QUARENTENA
+        value: /app/entrada/quarentena
+      - key: PASTA_ARQUIVO
+        value: /app/arquivo
+      - key: PORT
+        value: "8000"
