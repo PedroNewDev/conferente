@@ -263,7 +263,7 @@ def test_logout_exige_post_com_csrf(client, empresa):
     r = client.get("/logout")
     assert r.status_code == 405
 
-    token = csrf(client, "/painel")
+    token = csrf(client, "/")
     r = client.post("/logout", data={"csrf_token": token}, follow_redirects=False)
     assert r.status_code == 303
     assert r.headers["location"] == "/login"
