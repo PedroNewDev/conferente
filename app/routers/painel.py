@@ -2,7 +2,7 @@
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -53,6 +53,11 @@ def indicadores(db: Session, empresa_id: int) -> dict:
 
 
 @router.get("/", response_class=HTMLResponse)
+def raiz() -> RedirectResponse:
+    return RedirectResponse("/notas")
+
+
+@router.get("/painel", response_class=HTMLResponse)
 def painel(request: Request, db: Session = Depends(get_db),
            usuario: Usuario = Depends(usuario_atual)):
     empresa = db.get(Empresa, usuario.empresa_id)
