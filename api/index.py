@@ -1,7 +1,10 @@
-"""Adaptador para execução serverless (Vercel).
+"""Adaptador para execução serverless (Vercel) — ambiente de demonstração.
 
-Serverless não tem disco persistente: o banco vive em /tmp e é recriado no
-primeiro acesso de cada instância, vazio. O usuário envia seus próprios XMLs.
+Serverless não tem disco persistente: o banco vive em /tmp e é recriado e
+semeado no primeiro acesso de cada instância, já com a empresa, os três
+logins de demonstração e os dados mockados (fornecedores, produtos e
+pedidos de compra). O visitante ainda pode criar sua própria conta e
+enviar seus próprios XMLs — o login nunca é dispensado.
 
 O ambiente oficial de execução continua sendo o `docker-compose.yml`
 (PostgreSQL, agendador ativo, disco persistente).
@@ -20,7 +23,6 @@ TRABALHO = Path("/tmp/conferente")
 os.environ.setdefault("APP_SECRET", "demonstracao-conferente-vercel")
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{TRABALHO}/conferente.db")
 os.environ.setdefault("AGENDADOR_ATIVO", "false")   # sem processo de fundo em serverless
-os.environ.setdefault("ACESSO_LIVRE", "true")       # demonstração: entra sem login
 os.environ.setdefault("FONTE_DOCUMENTOS", "pasta")
 os.environ.setdefault("PASTA_ENTRADA", f"{TRABALHO}/entrada/novos")
 os.environ.setdefault("PASTA_PROCESSADOS", f"{TRABALHO}/entrada/processados")
@@ -30,12 +32,25 @@ os.environ.setdefault("PASTA_RELATORIOS", f"{TRABALHO}/relatorios")
 
 TRABALHO.mkdir(parents=True, exist_ok=True)
 
-from app.database import Base, engine  # noqa: E402
+from app.database import Base, SessionLocal, engine  # noqa: E402
 from app.main import app  # noqa: E402
+from scripts.seed import popular  # noqa: E402
+
+
+def preparar_demonstracao() -> None:
+    """Cria o esquema e semeia os logins/dados de demonstração — uma vez por
+    instância. Falha aqui não pode derrubar a função: o app sobe mesmo assim."""
+    Base.metadata.create_all(engine)
+    db = SessionLocal()
+    try:
+        popular(db)
+    finally:
+        db.close()
+
 
 try:
-    Base.metadata.create_all(engine)
-except Exception as exc:  # noqa: BLE001 — instância serverless
-    print(f"[init] falha ao criar esquema: {exc}")
+    preparar_demonstracao()
+except Exception as exc:  # noqa: BLE001 — ambiente de demonstração
+    print(f"[demonstracao] falha ao preparar dados iniciais: {exc}")
 
 # A Vercel procura por `app` (ASGI) neste módulo.
