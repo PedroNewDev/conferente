@@ -426,6 +426,9 @@ textarea { resize: vertical; min-height: 70px; }
   color: var(--verde);
   font-weight: 600;
 }
+.acessos-demo { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
+.acessos-demo form { margin: 0; }
+.acessos-demo .botao { width: 100%; justify-content: center; }
 
 @media (max-width: 860px) {
   .pagina-login { grid-template-columns: 1fr; }

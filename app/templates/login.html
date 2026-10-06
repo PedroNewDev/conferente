@@ -43,24 +43,26 @@
         Ainda não tem conta? <a href="/cadastro">Criar conta</a>
       </div>
 
-      {% if acesso_livre %}
-      <div class="aviso ok" style="margin-top:18px">
-        Nesta demonstração o login é dispensado —
-        <a href="/"><b>entrar direto como administrador</b></a>.
-        Use o formulário acima só para ver o sistema pelos olhos de outro papel.
-      </div>
-      {% endif %}
-
       <div class="dica-login">
-        <b>Ambiente de demonstração</b> — três acessos, um por papel:
-        <table class="tabela-acessos">
-          <tr><td><code>ana@mercadobompreco.com.br</code></td>
-              <td><code>admin123</code></td><td>admin</td></tr>
-          <tr><td><code>carlos@mercadobompreco.com.br</code></td>
-              <td><code>compra123</code></td><td>comprador</td></tr>
-          <tr><td><code>marina@mercadobompreco.com.br</code></td>
-              <td><code>financeiro123</code></td><td>financeiro</td></tr>
-        </table>
+        <b>Quer só conhecer o sistema?</b> Entre direto numa conta de demonstração,
+        um clique por papel — sem precisar digitar nada:
+        <div class="acessos-demo">
+          <form method="post" action="/login">
+            <input type="hidden" name="email" value="ana@mercadobompreco.com.br">
+            <input type="hidden" name="senha" value="admin123">
+            <button class="botao secundario pequeno" type="submit">Entrar como admin</button>
+          </form>
+          <form method="post" action="/login">
+            <input type="hidden" name="email" value="carlos@mercadobompreco.com.br">
+            <input type="hidden" name="senha" value="compra123">
+            <button class="botao secundario pequeno" type="submit">Entrar como comprador</button>
+          </form>
+          <form method="post" action="/login">
+            <input type="hidden" name="email" value="marina@mercadobompreco.com.br">
+            <input type="hidden" name="senha" value="financeiro123">
+            <button class="botao secundario pequeno" type="submit">Entrar como financeiro</button>
+          </form>
+        </div>
       </div>
     </div>
   </section>
