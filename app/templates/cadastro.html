@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Criar conta · Conferente</title>
+  <link rel="stylesheet" href="/static/estilo.css">
+</head>
+<body>
+<div class="pagina-login">
+  <section class="painel-marca">
+    <div class="logotipo">Conferente</div>
+    <div>
+      <h2>Cada nota conferida antes de virar estoque e dívida.</h2>
+      <p>Recebimento automático de NF-e: validação, conciliação com o pedido
+      de compra, bloqueio de divergências e lançamento no estoque e no
+      contas a pagar — sem intervenção manual.</p>
+    </div>
+    <div class="selo-rodape">Compras · Estoque · Contas a pagar</div>
+  </section>
+
+  <section class="painel-formulario">
+    <div class="caixa-login">
+      <h1>Criar conta</h1>
+      <div class="sub">Cadastre sua empresa e o primeiro usuário (administrador).</div>
+
+      {% if erro %}<div class="aviso erro">{{ erro }}</div>{% endif %}
+
+      <form method="post" action="/cadastro">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <label class="campo">
+          <span>Razão social da empresa</span>
+          <input type="text" name="empresa_nome" required autofocus
+                 placeholder="Minha Empresa LTDA">
+        </label>
+        <label class="campo">
+          <span>CNPJ</span>
+          <input type="text" name="cnpj" required placeholder="00.000.000/0000-00">
+        </label>
+        <label class="campo">
+          <span>Seu nome</span>
+          <input type="text" name="nome" required placeholder="Seu nome completo">
+        </label>
+        <label class="campo">
+          <span>E-mail</span>
+          <input type="email" name="email" required placeholder="voce@empresa.com.br">
+        </label>
+        <label class="campo">
+          <span>Senha</span>
+          <input type="password" name="senha" required minlength="8" placeholder="Mínimo 8 caracteres">
+        </label>
+        <label class="campo">
+          <span>Confirme a senha</span>
+          <input type="password" name="confirma_senha" required minlength="8" placeholder="••••••••">
+        </label>
+        <button class="botao" type="submit">Criar conta</button>
+      </form>
+
+      <div class="dica-login">
+        Já tem conta? <a href="/login">Entrar</a>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
