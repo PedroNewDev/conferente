@@ -4,19 +4,26 @@ Cria uma empresa, três usuários (um por papel), três fornecedores, doze
 produtos com de-para e quatro pedidos de compra.
 Idempotente: se a empresa já existe, não recria.
 """
+import shutil
 import sys
-from datetime import date, timedelta
+import tempfile
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.database import Base, SessionLocal, engine
+from app.fontes.pasta import FontePasta
 from app.models import (
     Empresa, Fornecedor, Parametro, PedidoCompra, PedidoItem,
     Produto, ProdutoFornecedor, Usuario,
 )
 from app.security import hash_senha
+from app.services.pipeline import executar_ciclo
+from scripts.gerar_notas_teste import _it, montar_nota
+
+FUSO_SP = timezone(timedelta(hours=-3))
 
 # CNPJs com dígito verificador válido
 CNPJ_EMPRESA = "11222333000181"
@@ -41,8 +48,14 @@ PRODUTOS = [
 ]
 
 
-def popular(db) -> bool:
-    """Insere os dados de demonstração na sessão dada. Devolve False se já existem."""
+def popular(db, com_notas_demo: bool = False) -> bool:
+    """Insere os dados de demonstração na sessão dada. Devolve False se já existem.
+
+    `com_notas_demo=True` também simula o recebimento de 3 NF-e reais (uma
+    aprovada, uma bloqueada, uma com entrega parcial), para a demonstração
+    abrir com notas, estoque e contas a pagar já populados. Desligado por
+    padrão porque os testes usam esta função esperando os pedidos "limpos"
+    (sem entregas), e cada cenário de teste gera suas próprias notas."""
     if db.query(Empresa).filter_by(cnpj=CNPJ_EMPRESA).first():
         return False
 
@@ -152,16 +165,72 @@ def popular(db) -> bool:
     ])
 
     db.commit()
+    if com_notas_demo:
+        _semear_notas_demo(db, empresa, forn_a, forn_b)
     return True
+
+
+def _semear_notas_demo(db, empresa: Empresa, forn_a: Fornecedor, forn_b: Fornecedor) -> None:
+    """Simula o recebimento de 3 NF-e reais via pipeline, para a demonstração
+    já abrir com notas, estoque e contas a pagar — não só cadastros vazios.
+    Cobre os três desfechos possíveis: aprovada, bloqueada e entrega parcial."""
+    ontem = (datetime.now(FUSO_SP) - timedelta(days=1)).replace(microsecond=0)
+    D = Decimal
+
+    # 01 — bate exatamente com o pedido PC-1001: aprovada, fecha o pedido,
+    # entra no estoque e gera contas a pagar.
+    vprod_1001 = D("22.50") * 50 + D("7.80") * 80 + D("9.40") * 60
+    vnf_1001 = vprod_1001 + D("120.00")
+    nota1 = montar_nota(90101, (forn_a.cnpj, forn_a.razao_social), [
+        _it("ALF001", "Arroz branco tipo 1 5kg", "10063021", "50", "22.50",
+            xped="PC-1001", nitemped=1),
+        _it("ALF002", "Feijao carioca 1kg", "07133399", "80", "7.80",
+            xped="PC-1001", nitemped=2),
+        _it("ALF003", "Acucar cristal 2kg", "17019900", "60", "9.40",
+            xped="PC-1001", nitemped=3),
+    ], ontem, frete=D("120.00"),
+        duplicatas=[("001", vnf_1001 / 2), ("002", vnf_1001 / 2)])
+
+    # 02 — preço do óleo 8% acima do pedido PC-1002: fica bloqueada, com
+    # impacto financeiro calculado automaticamente.
+    nota2 = montar_nota(90102, (forn_a.cnpj, forn_a.razao_social), [
+        _it("ALF004", "Oleo de soja 900ml", "15071000", "100", "7.45",
+            unidade="CX", xped="PC-1002"),
+        _it("ALF005", "Cafe torrado e moido 500g", "09012100", "40", "14.20",
+            unidade="CX", xped="PC-1002"),
+    ], ontem - timedelta(days=1), duplicatas=[("001", D("1313.00"))])
+
+    # 05 — entrega parcial (metade) do pedido PC-1004: aprovada, pedido fica
+    # com status "parcial".
+    nota3 = montar_nota(90103, (forn_b.cnpj, forn_b.razao_social), [
+        _it("BET005", "Biscoito cream cracker 400g", "19053100", "30", "4.10",
+            unidade="CX", xped="PC-1004"),
+        _it("BET006", "Detergente neutro 500ml", "34022000", "45", "2.15",
+            unidade="CX", xped="PC-1004"),
+    ], ontem - timedelta(days=2), duplicatas=[("001", D("219.75"))])
+
+    pasta_tmp = Path(tempfile.mkdtemp(prefix="conferente_seed_"))
+    try:
+        entrada = pasta_tmp / "entrada"
+        entrada.mkdir()
+        (entrada / "90101.xml").write_bytes(nota1)
+        (entrada / "90102.xml").write_bytes(nota2)
+        (entrada / "90103.xml").write_bytes(nota3)
+        fonte = FontePasta(str(entrada), str(pasta_tmp / "processados"),
+                           str(pasta_tmp / "quarentena"))
+        executar_ciclo(db, empresa.id, fonte)
+    finally:
+        shutil.rmtree(pasta_tmp, ignore_errors=True)
 
 
 def rodar() -> None:
     Base.metadata.create_all(engine)
     db = SessionLocal()
     try:
-        if popular(db):
+        if popular(db, com_notas_demo=True):
             print("Seed concluído: 1 empresa, 3 usuários, 3 fornecedores, "
-                  "12 produtos com de-para e 4 pedidos de compra.")
+                  "12 produtos com de-para, 4 pedidos de compra e 3 notas "
+                  "já recebidas (aprovada, bloqueada, parcial).")
             print("Logins:")
             print("  ana@mercadobompreco.com.br     / admin123       (admin)")
             print("  carlos@mercadobompreco.com.br  / compra123      (comprador)")

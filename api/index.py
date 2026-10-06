@@ -43,7 +43,7 @@ def preparar_demonstracao() -> None:
     Base.metadata.create_all(engine)
     db = SessionLocal()
     try:
-        popular(db)
+        popular(db, com_notas_demo=True)
     finally:
         db.close()
 
