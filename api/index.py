@@ -1,8 +1,7 @@
-"""Adaptador para execução serverless (Vercel) — ambiente de demonstração.
+"""Adaptador para execução serverless (Vercel).
 
-Serverless não tem disco persistente: o banco vive em /tmp e é recriado e
-semeado no primeiro acesso de cada instância, já com os 15 XMLs de teste na
-pasta de entrada. Cada visitante recebe, portanto, um ambiente limpo.
+Serverless não tem disco persistente: o banco vive em /tmp e é recriado no
+primeiro acesso de cada instância, vazio. O usuário envia seus próprios XMLs.
 
 O ambiente oficial de execução continua sendo o `docker-compose.yml`
 (PostgreSQL, agendador ativo, disco persistente).
@@ -31,27 +30,12 @@ os.environ.setdefault("PASTA_RELATORIOS", f"{TRABALHO}/relatorios")
 
 TRABALHO.mkdir(parents=True, exist_ok=True)
 
-from app.database import Base, SessionLocal, engine  # noqa: E402
+from app.database import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
-from scripts.gerar_notas_teste import gerar_todos  # noqa: E402
-from scripts.seed import popular  # noqa: E402
-
-
-def preparar_demonstracao() -> None:
-    """Cria o esquema, semeia os dados e gera os XMLs de teste — uma vez por
-    instância. Falha aqui não pode derrubar a função: o app sobe mesmo assim."""
-    Base.metadata.create_all(engine)
-    db = SessionLocal()
-    try:
-        if popular(db):
-            gerar_todos(Path(os.environ["PASTA_ENTRADA"]))
-    finally:
-        db.close()
-
 
 try:
-    preparar_demonstracao()
-except Exception as exc:  # noqa: BLE001 — ambiente de demonstração
-    print(f"[demonstracao] falha ao preparar dados iniciais: {exc}")
+    Base.metadata.create_all(engine)
+except Exception as exc:  # noqa: BLE001 — instância serverless
+    print(f"[init] falha ao criar esquema: {exc}")
 
 # A Vercel procura por `app` (ASGI) neste módulo.
